@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Unlicense
-pragma solidity 0.8.19;
+pragma solidity ^0.8.24;
 
 import { ERC20 as SolmateERC20 } from "@rari-capital/solmate/src/tokens/ERC20.sol";
 

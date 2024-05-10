@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.24;
 
 import "./Base.t.sol";
 import "../src/PermitC.sol";
@@ -73,7 +73,8 @@ contract PermitC20SignatureTransfer is BaseTest {
     }
 
     modifier whenExpirationIsInThePast(uint48 expiration) {
-        testData.expiration = uint48(bound(expiration, type(uint48).min + 1, block.timestamp));
+        vm.assume(block.timestamp > 0);
+        testData.expiration = uint48(bound(expiration, type(uint48).min + 1, block.timestamp - 1));
         _;
     }
 
@@ -157,6 +158,7 @@ contract PermitC20SignatureTransfer is BaseTest {
             keccak256(
                 abi.encode(
                     SINGLE_USE_PERMIT_TYPEHASH,
+                    TOKEN_TYPE_ERC20,
                     testData.token,
                     testData.tokenId,
                     testData.amount,
@@ -203,6 +205,7 @@ contract PermitC20SignatureTransfer is BaseTest {
             keccak256(
                 abi.encode(
                     SINGLE_USE_PERMIT_TYPEHASH,
+                    TOKEN_TYPE_ERC20,
                     testData.token,
                     testData.tokenId,
                     testData.amount,
@@ -240,6 +243,7 @@ contract PermitC20SignatureTransfer is BaseTest {
             keccak256(
                 abi.encode(
                     SINGLE_USE_PERMIT_TYPEHASH,
+                    TOKEN_TYPE_ERC20,
                     testData.token,
                     testData.tokenId,
                     testData.amount,
@@ -286,6 +290,7 @@ contract PermitC20SignatureTransfer is BaseTest {
             keccak256(
                 abi.encode(
                     SINGLE_USE_PERMIT_TYPEHASH,
+                    TOKEN_TYPE_ERC20,
                     testData.token,
                     testData.tokenId,
                     testData.amount,
@@ -332,6 +337,7 @@ contract PermitC20SignatureTransfer is BaseTest {
             keccak256(
                 abi.encode(
                     SINGLE_USE_PERMIT_TYPEHASH,
+                    TOKEN_TYPE_ERC20,
                     testData.token,
                     testData.tokenId,
                     testData.amount,
@@ -397,6 +403,7 @@ contract PermitC20SignatureTransfer is BaseTest {
             keccak256(
                 abi.encode(
                     SINGLE_USE_PERMIT_TYPEHASH,
+                    TOKEN_TYPE_ERC20,
                     testData.token,
                     testData.tokenId,
                     testData.amount,
@@ -434,6 +441,7 @@ contract PermitC20SignatureTransfer is BaseTest {
             keccak256(
                 abi.encode(
                     SINGLE_USE_PERMIT_TYPEHASH,
+                    TOKEN_TYPE_ERC20,
                     testData.token,
                     testData.tokenId,
                     testData.amount,
@@ -496,7 +504,7 @@ contract PermitC20SignatureTransfer is BaseTest {
         bytes32 typeHash = keccak256(
             bytes(
                 string.concat(
-                    SINGLE_USE_PERMIT_ADVANCED_TYPEHASH_STUB,
+                    SINGLE_USE_PERMIT_TRANSFER_ADVANCED_TYPEHASH_STUB,
                     additionalDataTypeString
                 )
             )
@@ -507,6 +515,7 @@ contract PermitC20SignatureTransfer is BaseTest {
             keccak256(
                 abi.encode(
                     typeHash,
+                    TOKEN_TYPE_ERC20,
                     testData.token,
                     testData.tokenId,
                     testData.amount,
@@ -566,7 +575,7 @@ contract PermitC20SignatureTransfer is BaseTest {
         bytes32 typeHash = keccak256(
             bytes(
                 string.concat(
-                    SINGLE_USE_PERMIT_ADVANCED_TYPEHASH_STUB,
+                    SINGLE_USE_PERMIT_TRANSFER_ADVANCED_TYPEHASH_STUB,
                     additionalDataTypeString
                 )
             )
@@ -577,6 +586,7 @@ contract PermitC20SignatureTransfer is BaseTest {
             keccak256(
                 abi.encode(
                     typeHash,
+                    TOKEN_TYPE_ERC20,
                     testData.token,
                     testData.tokenId,
                     testData.amount,
@@ -593,7 +603,7 @@ contract PermitC20SignatureTransfer is BaseTest {
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(aliceKey, digest);
         bytes memory signedPermit = abi.encodePacked(r, s, v);
         bytes32 tmpAdditionalData = additionalData;
-        bytes32 additionalDataTypeHash = keccak256(bytes(string.concat(SINGLE_USE_PERMIT_ADVANCED_TYPEHASH_STUB, additionalDataTypeString)));
+        bytes32 additionalDataTypeHash = keccak256(bytes(string.concat(SINGLE_USE_PERMIT_TRANSFER_ADVANCED_TYPEHASH_STUB, additionalDataTypeString)));
 
         permitC.registerAdditionalDataHash(additionalDataTypeString);
 
@@ -624,6 +634,7 @@ contract PermitC20SignatureTransfer is BaseTest {
             keccak256(
                 abi.encode(
                     SINGLE_USE_PERMIT_TYPEHASH,
+                    TOKEN_TYPE_ERC20,
                     testData.token,
                     testData.tokenId,
                     testData.amount,
@@ -682,7 +693,7 @@ contract PermitC20SignatureTransfer is BaseTest {
         bytes32 typeHash = keccak256(
             bytes(
                 string.concat(
-                    SINGLE_USE_PERMIT_ADVANCED_TYPEHASH_STUB,
+                    SINGLE_USE_PERMIT_TRANSFER_ADVANCED_TYPEHASH_STUB,
                     additionalDataTypeString
                 )
             )
@@ -693,6 +704,7 @@ contract PermitC20SignatureTransfer is BaseTest {
             keccak256(
                 abi.encode(
                     typeHash,
+                    TOKEN_TYPE_ERC20,
                     testData.token,
                     testData.tokenId,
                     testData.amount,
@@ -709,7 +721,7 @@ contract PermitC20SignatureTransfer is BaseTest {
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(aliceKey, digest);
         bytes memory signedPermit = abi.encodePacked(r, s, v);
         bytes32 tmpAdditionalData = additionalData;
-        bytes32 additionalDataTypeHash = keccak256(bytes(string.concat(SINGLE_USE_PERMIT_ADVANCED_TYPEHASH_STUB, additionalDataTypeString)));
+        bytes32 additionalDataTypeHash = keccak256(bytes(string.concat(SINGLE_USE_PERMIT_TRANSFER_ADVANCED_TYPEHASH_STUB, additionalDataTypeString)));
 
         permitC.registerAdditionalDataHash(additionalDataTypeString);
 

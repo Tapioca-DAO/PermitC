@@ -1,4 +1,4 @@
-pragma solidity >=0.8.4 <=0.8.19;
+pragma solidity ^0.8.24;
 
 import "../Base.t.sol";
 
@@ -33,16 +33,16 @@ contract lockdownTest is BaseTest {
         vm.startPrank(alice);
         ERC721(token).approve(address(permitC), 1);
 
-        permitC.approve(token, 1, bob, 1, uint48(block.timestamp));
-        permitC.approve(token, 1, carol, 1, uint48(block.timestamp + 1000));
+        permitC.approve(TOKEN_TYPE_ERC721, token, 1, bob, 1, uint48(block.timestamp));
+        permitC.approve(TOKEN_TYPE_ERC721, token, 1, carol, 1, uint48(block.timestamp + 1000));
 
         vm.expectEmit(true, true, false, false);
         emit Lockdown(alice);
         permitC.lockdown();
         vm.stopPrank();
 
-        (uint256 allowanceBob,) = permitC.allowance(alice, bob, token, 1);
-        (uint256 allowanceCarol,) = permitC.allowance(alice, carol, token, 1);
+        (uint256 allowanceBob,) = permitC.allowance(alice, bob, TOKEN_TYPE_ERC721, token, 1);
+        (uint256 allowanceCarol,) = permitC.allowance(alice, carol, TOKEN_TYPE_ERC721, token, 1);
 
         assertEq(allowanceBob, 0);
         assertEq(allowanceCarol, 0);
@@ -64,16 +64,16 @@ contract lockdownTest is BaseTest {
         vm.startPrank(alice);
         ERC1155(token).setApprovalForAll(address(permitC), true);
 
-        permitC.approve(token, 1, bob, 1, uint48(block.timestamp));
-        permitC.approve(token, 1, carol, 1, uint48(block.timestamp + 1000));
+        permitC.approve(TOKEN_TYPE_ERC1155, token, 1, bob, 1, uint48(block.timestamp));
+        permitC.approve(TOKEN_TYPE_ERC1155, token, 1, carol, 1, uint48(block.timestamp + 1000));
 
         vm.expectEmit(true, true, false, false);
         emit Lockdown(alice);
         permitC.lockdown();
         vm.stopPrank();
 
-        (uint256 allowanceBob,) = permitC.allowance(alice, bob, token, 1);
-        (uint256 allowanceCarol,) = permitC.allowance(alice, carol, token, 1);
+        (uint256 allowanceBob,) = permitC.allowance(alice, bob, TOKEN_TYPE_ERC1155, token, 1);
+        (uint256 allowanceCarol,) = permitC.allowance(alice, carol, TOKEN_TYPE_ERC1155, token, 1);
         assertEq(allowanceBob, 0);
         assertEq(allowanceCarol, 0);
 

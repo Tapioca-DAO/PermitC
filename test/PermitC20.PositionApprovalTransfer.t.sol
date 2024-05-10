@@ -1,4 +1,4 @@
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.24;
 
 import "./Base.t.sol";
 import "../src/DataTypes.sol";
@@ -40,7 +40,7 @@ contract PositionApprovalTransferTest is BaseTest {
     TestData private testData;
 
     string constant FILL_PERMITTED_ORDER_STRING = "bytes32 orderDigest)";
-    bytes32 FILL_PERMITTED_ORDER_TYPEHASH = keccak256(bytes(string.concat(SINGLE_USE_PERMIT_ADVANCED_TYPEHASH_STUB, FILL_PERMITTED_ORDER_STRING)));
+    bytes32 FILL_PERMITTED_ORDER_TYPEHASH = keccak256(bytes(string.concat(PERMIT_ORDER_ADVANCED_TYPEHASH_STUB, FILL_PERMITTED_ORDER_STRING)));
     
     function setUp() public override {
         super.setUp();
@@ -63,7 +63,8 @@ contract PositionApprovalTransferTest is BaseTest {
     }
 
     modifier whenExpirationIsInThePast(uint48 expiration) {
-        testData.expiration = uint48(bound(expiration, type(uint48).min + 1, block.timestamp));
+        vm.assume(block.timestamp > 0);
+        testData.expiration = uint48(bound(expiration, type(uint48).min + 1, block.timestamp - 1));
         _;
     }
 
@@ -153,6 +154,89 @@ contract PositionApprovalTransferTest is BaseTest {
         assertFalse(isError);
     }
 
+    function testFillOrder_ERC20_RevertsAfterOrderCancel(uint48 expiration_, bytes32 orderId_)
+     public
+     whenExpirationIsInTheFuture(expiration_)
+     whenTokenIsERC20()
+     whenOrderIdIsNotZero(orderId_) {
+        (address token, address owner, address spender, uint256 tokenId, uint208 amount, uint48 expiration, bytes32 orderId, uint256 nonce) = _cacheData();
+        _mint20(token, owner, 1);
+
+        changePrank(owner);
+        ERC20(testData.token).approve(address(permitC), 1);
+
+        permitC.registerAdditionalDataHash(FILL_PERMITTED_ORDER_STRING);
+
+        bytes memory signedPermit = getSignature(SignatureDetails({
+            operator: spender, 
+            token: token, 
+            tokenId: tokenId, 
+            orderId: orderId, 
+            amount: amount, 
+            nonce: nonce, 
+            approvalExpiration: expiration,
+            sigDeadline: expiration,
+            tokenOwnerKey: aliceKey
+        }));
+
+        OrderFillAmounts memory orderFillAmounts = OrderFillAmounts({
+            orderStartAmount: uint200(amount),
+            requestedFillAmount: uint200(amount),
+            minimumFillAmount: uint200(amount)
+        });
+
+        changePrank(owner);
+        permitC.closePermittedOrder(owner, spender, TOKEN_TYPE_ERC20, token, tokenId, orderId);
+
+        changePrank(spender);
+        vm.expectRevert(PermitC__OrderIsEitherCancelledOrFilled.selector);
+        (, bool isError) = permitC.fillPermittedOrderERC20(
+            signedPermit, orderFillAmounts, token, owner, spender, nonce, expiration, 
+            orderId, FILL_PERMITTED_ORDER_TYPEHASH
+        );
+  
+        assertEq(ERC20(token).balanceOf(spender), 0);
+    }
+
+    function testClosePermittedOrderRevertsWhenNotOwnerOrOperator(uint48 expiration_, bytes32 orderId_, address maliciousCloser)
+     public
+     whenExpirationIsInTheFuture(expiration_)
+     whenTokenIsERC20()
+     whenOrderIdIsNotZero(orderId_) {
+        (address token, address owner, address spender, uint256 tokenId, uint208 amount, uint48 expiration, bytes32 orderId, uint256 nonce) = _cacheData();
+        _mint20(token, owner, 1);
+
+        vm.assume(maliciousCloser != owner);
+        vm.assume(maliciousCloser != spender);
+
+        changePrank(owner);
+        ERC20(testData.token).approve(address(permitC), 1);
+
+        permitC.registerAdditionalDataHash(FILL_PERMITTED_ORDER_STRING);
+
+        bytes memory signedPermit = getSignature(SignatureDetails({
+            operator: spender, 
+            token: token, 
+            tokenId: tokenId, 
+            orderId: orderId, 
+            amount: amount, 
+            nonce: nonce, 
+            approvalExpiration: expiration,
+            sigDeadline: expiration,
+            tokenOwnerKey: aliceKey
+        }));
+
+        OrderFillAmounts memory orderFillAmounts = OrderFillAmounts({
+            orderStartAmount: uint200(amount),
+            requestedFillAmount: uint200(amount),
+            minimumFillAmount: uint200(amount)
+        });
+
+        changePrank(maliciousCloser);
+        vm.expectRevert(PermitC__CallerMustBeOwnerOrOperator.selector);
+        permitC.closePermittedOrder(owner, spender, TOKEN_TYPE_ERC20, token, tokenId, orderId);
+    }
+
     function testFillOrder_ERC20_AfterMasterNonceIncrease(uint48 expiration_, bytes32 orderId_)
      public
      whenExpirationIsInTheFuture(expiration_)
@@ -194,14 +278,14 @@ contract PositionApprovalTransferTest is BaseTest {
         assertEq(ERC20(testData.token).balanceOf(testData.spender), 50);
         assertFalse(isError);
 
-        (uint256 allowance, uint256 expiration) = permitC.allowance(testData.owner, testData.spender, testData.token, testData.tokenId, testData.orderId);
+        (uint256 allowance, uint256 expiration) = permitC.allowance(testData.owner, testData.spender, TOKEN_TYPE_ERC20, testData.token, testData.tokenId, testData.orderId);
         assertEq(allowance, 50);
         assertEq(expiration, testData.expiration);
 
         changePrank(testData.owner);
         permitC.lockdown();
 
-        (uint256 allowanceAfter, uint256 expirationAfter) = permitC.allowance(testData.owner, testData.spender, testData.token, testData.tokenId, testData.orderId);
+        (uint256 allowanceAfter, uint256 expirationAfter) = permitC.allowance(testData.owner, testData.spender, TOKEN_TYPE_ERC20, testData.token, testData.tokenId, testData.orderId);
         assertEq(allowanceAfter, 0);
         assertEq(expirationAfter, 0);
     }
@@ -246,7 +330,8 @@ contract PositionApprovalTransferTest is BaseTest {
         );
         
         address tmpToken = token;
-        (uint256 allowedAmount, uint256 allowanceExpiration) = permitC.allowance(owner, spender, tmpToken, tokenId, orderId);
+        uint256 tmpTokenId = tokenId;
+        (uint256 allowedAmount, uint256 allowanceExpiration) = permitC.allowance(owner, spender, TOKEN_TYPE_ERC20, tmpToken, tmpTokenId, orderId);
         assertEq(allowedAmount, 1);
         assertEq(expiration, allowanceExpiration);
         assertEq(ERC20(token).balanceOf(alice), 1);
@@ -264,6 +349,7 @@ contract PositionApprovalTransferTest is BaseTest {
                 keccak256(
                     abi.encode(
                         FILL_PERMITTED_ORDER_TYPEHASH,
+                        TOKEN_TYPE_ERC20,
                         details.token,
                         details.tokenId,
                         details.amount,

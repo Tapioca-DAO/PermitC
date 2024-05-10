@@ -6,6 +6,7 @@ import "forge-std/StdUtils.sol";
 import {TestBase} from "forge-std/Base.sol";
 
 import "src/PermitC.sol";
+import "src/CollateralizedPausableFlags.sol";
 
 import "./mocks/ERC721Mock.sol";
 import "./mocks/ERC1155Mock.sol";
@@ -36,13 +37,17 @@ contract BaseTest is TestBase, StdAssertions, StdCheats, StdUtils {
     address bob;
     address carol;
 
-    function setUp() public virtual {
-        permitC = new PermitC("PermitC", "1");
+    uint256 internal constant pausableThreshold = 5 ether;
 
+    function setUp() public virtual {
         (admin, adminKey) = makeAddrAndKey("admin");
         (alice, aliceKey) = makeAddrAndKey("alice");
         (bob, bobKey) = makeAddrAndKey("bob");
         (carol, carolKey) = makeAddrAndKey("carol");
+
+        vm.deal(admin, 100 ether);
+
+        permitC = new PermitC("PermitC", "1", admin, pausableThreshold);
 
         // Warp to a more realistic timestamp
         vm.warp(1703688340);

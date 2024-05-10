@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.24;
 
 import "forge-std/Test.sol";
 import "../src/PermitC.sol";
@@ -46,24 +46,23 @@ contract PermitC721Test is Test {
 
     PermitC permitC;
 
+    uint256 adminKey;
     uint256 aliceKey;
     uint256 bobKey;
     uint256 carolKey;
 
+    address admin;
     address alice;
     address bob;
     address carol;
 
     function setUp() public {
-        permitC = new PermitC("PermitC", "1");
+        (admin, adminKey) = makeAddrAndKey("admin");
+        (alice, aliceKey) = makeAddrAndKey("alice");
+        (bob, bobKey) = makeAddrAndKey("bob");
+        (carol, carolKey) = makeAddrAndKey("carol");
 
-        aliceKey = 1;
-        bobKey = 2;
-        carolKey = 3;
-
-        alice = vm.addr(aliceKey);
-        bob = vm.addr(bobKey);
-        carol = vm.addr(carolKey);
+        permitC = new PermitC("PermitC", "1", admin, 5 ether);
     }
 
     function testTransferFromWithApprovalOnChain_ERC721_base() public {
@@ -77,16 +76,16 @@ contract PermitC721Test is Test {
         ERC721(token).approve(address(permitC), 1);
 
         vm.prank(alice);
-        permitC.approve(token, 1, bob, 1, uint48(block.timestamp));
+        permitC.approve(TOKEN_TYPE_ERC721, token, 1, bob, 1, uint48(block.timestamp));
 
-        (uint256 allowanceAmount, uint256 allowanceExpiration) = permitC.allowance(alice, bob, token, 1);
+        (uint256 allowanceAmount, uint256 allowanceExpiration) = permitC.allowance(alice, bob, TOKEN_TYPE_ERC721, token, 1);
         assertEq(allowanceAmount, 1);
         assertEq(allowanceExpiration, uint48(block.timestamp));
 
         vm.prank(bob);
         permitC.transferFromERC721(alice, bob, token, 1);
 
-        (allowanceAmount,) = permitC.allowance(alice, bob, token, 1);
+        (allowanceAmount,) = permitC.allowance(alice, bob, TOKEN_TYPE_ERC721, token, 1);
 
         assertEq(ERC721(token).ownerOf(1), bob);
         assertEq(allowanceAmount, 0);
@@ -103,10 +102,10 @@ contract PermitC721Test is Test {
         ERC721(token).approve(address(permitC), 1);
 
         vm.prank(alice);
-        permitC.approve(token, 1, carol, 1, uint48(block.timestamp));
+        permitC.approve(TOKEN_TYPE_ERC721, token, 1, carol, 1, uint48(block.timestamp));
 
-        (uint256 allowanceCarol,) = permitC.allowance(alice, carol, token, 1);
-        (uint256 allowanceBob,) = permitC.allowance(alice, bob, token, 1);
+        (uint256 allowanceCarol,) = permitC.allowance(alice, carol, TOKEN_TYPE_ERC721, token, 1);
+        (uint256 allowanceBob,) = permitC.allowance(alice, bob, TOKEN_TYPE_ERC721, token, 1);
         assertEq(allowanceCarol, 1);
         assertEq(allowanceBob, 0);
 
@@ -114,8 +113,8 @@ contract PermitC721Test is Test {
         vm.expectRevert(PermitC__ApprovalTransferPermitExpiredOrUnset.selector);
         permitC.transferFromERC721(alice, bob, token, 1);
 
-        (allowanceCarol,) = permitC.allowance(alice, carol, token, 1);
-        (allowanceBob,) = permitC.allowance(alice, bob, token, 1);
+        (allowanceCarol,) = permitC.allowance(alice, carol, TOKEN_TYPE_ERC721, token, 1);
+        (allowanceBob,) = permitC.allowance(alice, bob, TOKEN_TYPE_ERC721, token, 1);
         assertEq(ERC721(token).ownerOf(1), alice);
         assertEq(allowanceCarol, 1);
         assertEq(allowanceBob, 0);
@@ -132,15 +131,15 @@ contract PermitC721Test is Test {
         ERC721(token).approve(address(permitC), 1);
 
         vm.prank(alice);
-        permitC.approve(token, 1, bob, 1, uint48(block.timestamp));
+        permitC.approve(TOKEN_TYPE_ERC721, token, 1, bob, 1, uint48(block.timestamp));
 
         vm.prank(alice);
-        permitC.approve(token, 1, carol, 1, uint48(block.timestamp + 1));
+        permitC.approve(TOKEN_TYPE_ERC721, token, 1, carol, 1, uint48(block.timestamp + 1));
 
         vm.warp(block.timestamp + 1);
 
-        (uint256 allowanceBob,) = permitC.allowance(alice, bob, token, 1);
-        (uint256 allowanceCarol,) = permitC.allowance(alice, carol, token, 1);
+        (uint256 allowanceBob,) = permitC.allowance(alice, bob, TOKEN_TYPE_ERC721, token, 1);
+        (uint256 allowanceCarol,) = permitC.allowance(alice, carol, TOKEN_TYPE_ERC721, token, 1);
 
         assertEq(allowanceBob, 0);
         assertEq(allowanceCarol, 1);
@@ -163,16 +162,16 @@ contract PermitC721Test is Test {
         ERC721(token).approve(address(permitC), 1);
 
         vm.startPrank(alice);
-        permitC.approve(token, 1, bob, 1, uint48(block.timestamp));
-        permitC.approve(token, 1, carol, 1, uint48(block.timestamp + 1000));
+        permitC.approve(TOKEN_TYPE_ERC721, token, 1, bob, 1, uint48(block.timestamp));
+        permitC.approve(TOKEN_TYPE_ERC721, token, 1, carol, 1, uint48(block.timestamp + 1000));
 
         vm.expectEmit(true, true, false, false);
         emit Lockdown(alice);
         permitC.lockdown();
         vm.stopPrank();
 
-        (uint256 allowanceBob,) = permitC.allowance(alice, bob, token, 1);
-        (uint256 allowanceCarol,) = permitC.allowance(alice, carol, token, 1);
+        (uint256 allowanceBob,) = permitC.allowance(alice, bob, TOKEN_TYPE_ERC721, token, 1);
+        (uint256 allowanceCarol,) = permitC.allowance(alice, carol, TOKEN_TYPE_ERC721, token, 1);
         assertEq(allowanceBob, 0);
         assertEq(allowanceCarol, 0);
 
@@ -195,15 +194,15 @@ contract PermitC721Test is Test {
         ERC721(token).approve(address(permitC), 1);
 
         vm.prank(alice);
-        permitC.approve(token, 1, bob, 100, uint48(block.timestamp + 1000));
+        permitC.approve(TOKEN_TYPE_ERC721, token, 1, bob, 100, uint48(block.timestamp + 1000));
 
-        (uint256 allowanceBob,) = permitC.allowance(alice, bob, token, 1);
+        (uint256 allowanceBob,) = permitC.allowance(alice, bob, TOKEN_TYPE_ERC721, token, 1);
         assertEq(allowanceBob, 100);
 
         vm.prank(bob);
         permitC.transferFromERC721(alice, bob, token, 1);
 
-        (allowanceBob,) = permitC.allowance(alice, bob, token, 1);
+        (allowanceBob,) = permitC.allowance(alice, bob, TOKEN_TYPE_ERC721, token, 1);
         assertEq(ERC721(token).ownerOf(1), bob);
         assertEq(allowanceBob, 0);
 
@@ -239,6 +238,7 @@ contract PermitC721Test is Test {
             keccak256(
                 abi.encode(
                     UPDATE_APPROVAL_TYPEHASH,
+                    TOKEN_TYPE_ERC721,
                     permit.token,
                     permit.id,
                     permit.amount,
@@ -258,15 +258,15 @@ contract PermitC721Test is Test {
         vm.prank(bob);
         vm.expectEmit(true, true, true, true);
         emit Approval(alice, token, bob, 1, 1, uint48(block.timestamp + 1000));
-        permitC.updateApprovalBySignature(permit.token, permit.id, permit.nonce, permit.amount, permit.operator, permit.expiration, permit.expiration, alice, signedPermit);
+        permitC.updateApprovalBySignature(TOKEN_TYPE_ERC721, permit.token, permit.id, permit.nonce, permit.amount, permit.operator, permit.expiration, permit.expiration, alice, signedPermit);
 
-        (uint256 allowanceBob,) = permitC.allowance(alice, bob, token, 1);
+        (uint256 allowanceBob,) = permitC.allowance(alice, bob, TOKEN_TYPE_ERC721, token, 1);
         assertEq(allowanceBob, 1);
 
         vm.prank(bob);
         permitC.transferFromERC721(alice, bob, token, 1);
 
-        (allowanceBob,) = permitC.allowance(alice, bob, token, 1);
+        (allowanceBob,) = permitC.allowance(alice, bob, TOKEN_TYPE_ERC721, token, 1);
         assertEq(ERC721(token).ownerOf(1), bob);
         assertEq(allowanceBob, 0);
     }
@@ -297,6 +297,7 @@ contract PermitC721Test is Test {
             keccak256(
                 abi.encode(
                     UPDATE_APPROVAL_TYPEHASH,
+                    TOKEN_TYPE_ERC721,
                     permit.token,
                     permit.id,
                     permit.amount,
@@ -317,7 +318,7 @@ contract PermitC721Test is Test {
         vm.prank(bob);
         vm.expectEmit(true, true, true, true);
         emit Approval(tmpSigner, token, bob, 1, 1, uint48(block.timestamp + 1000));
-        permitC.updateApprovalBySignature(permit.token, permit.id, permit.nonce, permit.amount, permit.operator, permit.expiration, permit.expiration, tmpSigner, signedPermit);
+        permitC.updateApprovalBySignature(TOKEN_TYPE_ERC721, permit.token, permit.id, permit.nonce, permit.amount, permit.operator, permit.expiration, permit.expiration, tmpSigner, signedPermit);
     }
 
     function testSetApprovalViaSignature_ERC721_InvalidSmartContractSigner() public {
@@ -346,6 +347,7 @@ contract PermitC721Test is Test {
             keccak256(
                 abi.encode(
                     UPDATE_APPROVAL_TYPEHASH,
+                    TOKEN_TYPE_ERC721,
                     permit.token,
                     permit.id,
                     permit.amount,
@@ -365,7 +367,7 @@ contract PermitC721Test is Test {
 
         vm.prank(bob);
         vm.expectRevert(PermitC__SignatureTransferInvalidSignature.selector);
-        permitC.updateApprovalBySignature(permit.token, permit.id, permit.nonce, permit.amount, permit.operator, permit.expiration, permit.expiration, tmpSigner, signedPermit);
+        permitC.updateApprovalBySignature(TOKEN_TYPE_ERC721, permit.token, permit.id, permit.nonce, permit.amount, permit.operator, permit.expiration, permit.expiration, tmpSigner, signedPermit);
     }
 
     function testSetApprovalViaSignature_ERC721_WrongToken(address badToken) public {
@@ -393,6 +395,7 @@ contract PermitC721Test is Test {
             keccak256(
                 abi.encode(
                     UPDATE_APPROVAL_TYPEHASH,
+                    TOKEN_TYPE_ERC721,
                     token,
                     permit.id,
                     permit.amount,
@@ -410,9 +413,9 @@ contract PermitC721Test is Test {
 
         vm.prank(bob);
         vm.expectRevert(PermitC__SignatureTransferInvalidSignature.selector);
-        permitC.updateApprovalBySignature(permit.token, permit.id, permit.nonce, permit.amount, permit.operator, permit.expiration, permit.expiration, alice, signedPermit);
+        permitC.updateApprovalBySignature(TOKEN_TYPE_ERC721, permit.token, permit.id, permit.nonce, permit.amount, permit.operator, permit.expiration, permit.expiration, alice, signedPermit);
 
-        (uint256 allowanceBob,) = permitC.allowance(alice, bob, token, 1);
+        (uint256 allowanceBob,) = permitC.allowance(alice, bob, TOKEN_TYPE_ERC721, token, 1);
         assertEq(allowanceBob, 0);
     }
 
@@ -440,6 +443,7 @@ contract PermitC721Test is Test {
             keccak256(
                 abi.encode(
                     UPDATE_APPROVAL_TYPEHASH,
+                    TOKEN_TYPE_ERC721,
                     permit.token,
                     permit.id,
                     1,
@@ -457,9 +461,9 @@ contract PermitC721Test is Test {
 
         vm.prank(bob);
         vm.expectRevert(PermitC__SignatureTransferInvalidSignature.selector);
-        permitC.updateApprovalBySignature(permit.token, permit.id, permit.nonce, permit.amount, permit.operator, permit.expiration, permit.expiration, alice, signedPermit);
+        permitC.updateApprovalBySignature(TOKEN_TYPE_ERC721, permit.token, permit.id, permit.nonce, permit.amount, permit.operator, permit.expiration, permit.expiration, alice, signedPermit);
 
-        (uint256 allowanceBob,) = permitC.allowance(alice, bob, token, 1);
+        (uint256 allowanceBob,) = permitC.allowance(alice, bob, TOKEN_TYPE_ERC721, token, 1);
         assertEq(allowanceBob, 0);
     }
 
@@ -487,6 +491,7 @@ contract PermitC721Test is Test {
             keccak256(
                 abi.encode(
                     UPDATE_APPROVAL_TYPEHASH,
+                    TOKEN_TYPE_ERC721,
                     permit.token,
                     permit.id,
                     1,
@@ -505,9 +510,9 @@ contract PermitC721Test is Test {
 
         vm.prank(bob);
         vm.expectRevert(PermitC__ApprovalTransferPermitExpiredOrUnset.selector);
-        permitC.updateApprovalBySignature(permit.token, permit.id, permit.nonce, permit.amount, permit.operator, permit.expiration, permit.expiration, alice, signedPermit);
+        permitC.updateApprovalBySignature(TOKEN_TYPE_ERC721, permit.token, permit.id, permit.nonce, permit.amount, permit.operator, permit.expiration, permit.expiration, alice, signedPermit);
 
-        (uint256 allowanceBob,) = permitC.allowance(alice, bob, token, 1);
+        (uint256 allowanceBob,) = permitC.allowance(alice, bob, TOKEN_TYPE_ERC721, token, 1);
         assertEq(allowanceBob, 0);
     }
 
@@ -535,6 +540,7 @@ contract PermitC721Test is Test {
             keccak256(
                 abi.encode(
                     UPDATE_APPROVAL_TYPEHASH,
+                    TOKEN_TYPE_ERC721,
                     permit.token,
                     permit.id,
                     1,
@@ -552,16 +558,16 @@ contract PermitC721Test is Test {
         bytes memory signedPermit = abi.encodePacked(r, s, v);
 
         vm.prank(bob);
-        permitC.updateApprovalBySignature(permit.token, permit.id, permit.nonce, permit.amount, permit.operator, permit.expiration, permit.expiration, alice, signedPermit);
+        permitC.updateApprovalBySignature(TOKEN_TYPE_ERC721, permit.token, permit.id, permit.nonce, permit.amount, permit.operator, permit.expiration, permit.expiration, alice, signedPermit);
 
-        (uint256 allowanceBob,) = permitC.allowance(alice, bob, token, 1);
+        (uint256 allowanceBob,) = permitC.allowance(alice, bob, TOKEN_TYPE_ERC721, token, 1);
         assertEq(allowanceBob, 1);
 
         vm.prank(bob);
         vm.expectRevert(PermitC__NonceAlreadyUsedOrRevoked.selector);
-        permitC.updateApprovalBySignature(permit.token, permit.id, permit.nonce, permit.amount, permit.operator, permit.expiration, permit.expiration, alice, signedPermit);
+        permitC.updateApprovalBySignature(TOKEN_TYPE_ERC721, permit.token, permit.id, permit.nonce, permit.amount, permit.operator, permit.expiration, permit.expiration, alice, signedPermit);
 
-        (allowanceBob,) = permitC.allowance(alice, bob, token, 1);
+        (allowanceBob,) = permitC.allowance(alice, bob, TOKEN_TYPE_ERC721, token, 1);
         assertEq(allowanceBob, 1);
     }
 
@@ -589,6 +595,7 @@ contract PermitC721Test is Test {
             keccak256(
                 abi.encode(
                     UPDATE_APPROVAL_TYPEHASH,
+                    TOKEN_TYPE_ERC721,
                     permit.token,
                     permit.id,
                     1,
@@ -605,9 +612,9 @@ contract PermitC721Test is Test {
 
         vm.prank(bob);
         vm.expectRevert(PermitC__SignatureTransferInvalidSignature.selector);
-        permitC.updateApprovalBySignature(permit.token, permit.id, permit.nonce, permit.amount, permit.operator, permit.expiration, permit.expiration, carol, signedPermit);
+        permitC.updateApprovalBySignature(TOKEN_TYPE_ERC721, permit.token, permit.id, permit.nonce, permit.amount, permit.operator, permit.expiration, permit.expiration, carol, signedPermit);
 
-        (uint256 allowanceBob,) = permitC.allowance(alice, bob, token, 1);
+        (uint256 allowanceBob,) = permitC.allowance(alice, bob, TOKEN_TYPE_ERC721, token, 1);
         assertEq(allowanceBob, 0);
     }
 
@@ -635,6 +642,7 @@ contract PermitC721Test is Test {
             keccak256(
                 abi.encode(
                     UPDATE_APPROVAL_TYPEHASH,
+                    TOKEN_TYPE_ERC721,
                     permit.token,
                     permit.id,
                     1,
@@ -654,7 +662,7 @@ contract PermitC721Test is Test {
 
         vm.prank(bob);
         vm.expectRevert(PermitC__NonceAlreadyUsedOrRevoked.selector);
-        permitC.updateApprovalBySignature(permit.token, permit.id, permit.nonce, permit.amount, permit.operator, permit.expiration, permit.expiration, alice, signedPermit);
+        permitC.updateApprovalBySignature(TOKEN_TYPE_ERC721, permit.token, permit.id, permit.nonce, permit.amount, permit.operator, permit.expiration, permit.expiration, alice, signedPermit);
 
         vm.prank(alice);
         vm.expectRevert(PermitC__NonceAlreadyUsedOrRevoked.selector);
@@ -662,9 +670,9 @@ contract PermitC721Test is Test {
 
         vm.prank(bob);
         vm.expectRevert(PermitC__NonceAlreadyUsedOrRevoked.selector);
-        permitC.updateApprovalBySignature(permit.token, permit.id, permit.nonce, permit.amount, permit.operator, permit.expiration, permit.expiration, alice, signedPermit);
+        permitC.updateApprovalBySignature(TOKEN_TYPE_ERC721, permit.token, permit.id, permit.nonce, permit.amount, permit.operator, permit.expiration, permit.expiration, alice, signedPermit);
 
-        (uint256 allowanceBob,) = permitC.allowance(alice, bob, token, 1);
+        (uint256 allowanceBob,) = permitC.allowance(alice, bob, TOKEN_TYPE_ERC721, token, 1);
         assertEq(allowanceBob, 0);
     }
 
@@ -693,6 +701,7 @@ contract PermitC721Test is Test {
             keccak256(
                 abi.encode(
                     UPDATE_APPROVAL_TYPEHASH,
+                    TOKEN_TYPE_ERC721,
                     permit.token,
                     permit.id,
                     permit.amount,
@@ -712,15 +721,15 @@ contract PermitC721Test is Test {
         vm.prank(bob);
         vm.expectEmit(true, true, true, true);
         emit Approval(alice, token, bob, 1, 1, uint48(block.timestamp + 1000));
-        permitC.updateApprovalBySignature(permit.token, permit.id, permit.nonce, permit.amount, permit.operator, permit.expiration, permit.expiration, alice, signedPermit);
+        permitC.updateApprovalBySignature(TOKEN_TYPE_ERC721, permit.token, permit.id, permit.nonce, permit.amount, permit.operator, permit.expiration, permit.expiration, alice, signedPermit);
 
-        (uint256 allowanceBob,) = permitC.allowance(alice, bob, token, 1);
+        (uint256 allowanceBob,) = permitC.allowance(alice, bob, TOKEN_TYPE_ERC721, token, 1);
         assertEq(allowanceBob, 1);
 
         vm.prank(bob);
         permitC.transferFromERC721(alice, bob, token, 1);
 
-        (allowanceBob,) = permitC.allowance(alice, bob, token, 1);
+        (allowanceBob,) = permitC.allowance(alice, bob, TOKEN_TYPE_ERC721, token, 1);
         assertEq(ERC721(token).ownerOf(1), alice);
         assertEq(allowanceBob, 1);
     }

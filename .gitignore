@@ -21,3 +21,4 @@ venv/
 slither.md
 
 .vscode/
+.DS_Store

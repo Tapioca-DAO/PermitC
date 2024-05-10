@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.24;
 
 import "forge-std/Test.sol";
 import "../src/PermitC.sol";
@@ -57,10 +57,12 @@ contract PermitC1155Test is Test {
 
     PermitC permitC;
 
+    uint256 adminKey;
     uint256 aliceKey;
     uint256 bobKey;
     uint256 carolKey;
 
+    address admin;
     address alice;
     address bob;
     address carol;
@@ -71,15 +73,12 @@ contract PermitC1155Test is Test {
     SaleApproval approval;
 
     function setUp() public {
-        permitC = new PermitC("PermitC", "1");
+        (admin, adminKey) = makeAddrAndKey("admin");
+        (alice, aliceKey) = makeAddrAndKey("alice");
+        (bob, bobKey) = makeAddrAndKey("bob");
+        (carol, carolKey) = makeAddrAndKey("carol");
 
-        aliceKey = 1;
-        bobKey = 2;
-        carolKey = 3;
-
-        alice = vm.addr(aliceKey);
-        bob = vm.addr(bobKey);
-        carol = vm.addr(carolKey);
+        permitC = new PermitC("PermitC", "1", admin, 5 ether);
     }
 
     function testPermitSignatureDetails_ERC1155() public {
@@ -106,6 +105,7 @@ contract PermitC1155Test is Test {
             keccak256(
                 abi.encode(
                     SINGLE_USE_PERMIT_TYPEHASH,
+                    TOKEN_TYPE_ERC1155,
                     permit.token,
                     permit.id,
                     permit.amount,
@@ -151,6 +151,7 @@ contract PermitC1155Test is Test {
             keccak256(
                 abi.encode(
                     SINGLE_USE_PERMIT_TYPEHASH,
+                    TOKEN_TYPE_ERC1155,
                     permit.token,
                     permit.id,
                     permit.amount,
@@ -197,6 +198,7 @@ contract PermitC1155Test is Test {
             keccak256(
                 abi.encode(
                     SINGLE_USE_PERMIT_TYPEHASH,
+                    TOKEN_TYPE_ERC1155,
                     permit.token,
                     permit.id,
                     permit.amount,
@@ -239,6 +241,7 @@ contract PermitC1155Test is Test {
             keccak256(
                 abi.encode(
                     SINGLE_USE_PERMIT_TYPEHASH,
+                    TOKEN_TYPE_ERC1155,
                     permit.token,
                     permit.id,
                     permit.amount,
@@ -285,6 +288,7 @@ contract PermitC1155Test is Test {
             keccak256(
                 abi.encode(
                     SINGLE_USE_PERMIT_TYPEHASH,
+                    TOKEN_TYPE_ERC1155,
                     permit.token,
                     permit.id,
                     permit.amount,
@@ -331,6 +335,7 @@ contract PermitC1155Test is Test {
             keccak256(
                 abi.encode(
                     SINGLE_USE_PERMIT_TYPEHASH,
+                    TOKEN_TYPE_ERC1155,
                     permit.token,
                     permit.id,
                     permit.amount,
@@ -388,6 +393,7 @@ contract PermitC1155Test is Test {
             keccak256(
                 abi.encode(
                     SINGLE_USE_PERMIT_TYPEHASH,
+                    TOKEN_TYPE_ERC1155,
                     permit.token,
                     permit.id,
                     permit.amount,
@@ -437,6 +443,7 @@ contract PermitC1155Test is Test {
             keccak256(
                 abi.encode(
                     SINGLE_USE_PERMIT_TYPEHASH,
+                    TOKEN_TYPE_ERC1155,
                     permit.token,
                     permit.id,
                     permit.amount,
@@ -500,7 +507,7 @@ contract PermitC1155Test is Test {
         bytes32 typeHash = keccak256(
             bytes(
                 string.concat(
-                    SINGLE_USE_PERMIT_ADVANCED_TYPEHASH_STUB,
+                    SINGLE_USE_PERMIT_TRANSFER_ADVANCED_TYPEHASH_STUB,
                     additionalDataTypeString
                 )
             )
@@ -511,6 +518,7 @@ contract PermitC1155Test is Test {
             keccak256(
                 abi.encode(
                     typeHash,
+                    TOKEN_TYPE_ERC1155,
                     permit.token,
                     permit.id,
                     permit.amount,
@@ -528,7 +536,7 @@ contract PermitC1155Test is Test {
             signedPermit = abi.encodePacked(r, s, v);
         }
         bytes32 tmpAdditionalData = additionalData;
-        bytes32 additionalDataTypeHash = keccak256(bytes(string.concat(SINGLE_USE_PERMIT_ADVANCED_TYPEHASH_STUB, additionalDataTypeString)));
+        bytes32 additionalDataTypeHash = keccak256(bytes(string.concat(SINGLE_USE_PERMIT_TRANSFER_ADVANCED_TYPEHASH_STUB, additionalDataTypeString)));
 
         permitC.registerAdditionalDataHash(additionalDataTypeString);
 

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.24;
 
 import "forge-std/Test.sol";
 import "../src/PermitC.sol";
@@ -68,10 +68,12 @@ contract PermitC721Test is Test {
 
     PermitC permitC;
 
+    uint256 adminKey;
     uint256 constant aliceKey = 1;
     uint256 constant bobKey = 2;
     uint256 constant carolKey = 3;
 
+    address admin;
     address immutable alice;
     address immutable bob;
     address immutable carol;
@@ -103,7 +105,9 @@ contract PermitC721Test is Test {
     }
 
     function setUp() public {
-        permitC = new PermitC("PermitC", "1");
+        (admin, adminKey) = makeAddrAndKey("admin");
+
+        permitC = new PermitC("PermitC", "1", admin, 5 ether);
     }
 
     function testPermitSignatureDetails_ERC721_base() public {
@@ -130,6 +134,7 @@ contract PermitC721Test is Test {
             keccak256(
                 abi.encode(
                     SINGLE_USE_PERMIT_TYPEHASH,
+                    TOKEN_TYPE_ERC721,
                     permit.token,
                     permit.id,
                     permit.amount,
@@ -178,6 +183,7 @@ contract PermitC721Test is Test {
             keccak256(
                 abi.encode(
                     SINGLE_USE_PERMIT_TYPEHASH,
+                    TOKEN_TYPE_ERC721,
                     permit.token,
                     permit.id,
                     permit.amount,
@@ -216,6 +222,7 @@ contract PermitC721Test is Test {
             keccak256(
                 abi.encode(
                     SINGLE_USE_PERMIT_TYPEHASH,
+                    TOKEN_TYPE_ERC721,
                     permit2.token,
                     permit2.id,
                     permit2.amount,
@@ -260,6 +267,7 @@ contract PermitC721Test is Test {
             keccak256(
                 abi.encode(
                     SINGLE_USE_PERMIT_TYPEHASH,
+                    TOKEN_TYPE_ERC721,
                     permit.token,
                     permit.id,
                     permit.amount,
@@ -305,6 +313,7 @@ contract PermitC721Test is Test {
             keccak256(
                 abi.encode(
                     SINGLE_USE_PERMIT_TYPEHASH,
+                    TOKEN_TYPE_ERC721,
                     permit.token,
                     permit.id,
                     permit.amount,
@@ -361,6 +370,7 @@ contract PermitC721Test is Test {
             keccak256(
                 abi.encode(
                     SINGLE_USE_PERMIT_TYPEHASH,
+                    TOKEN_TYPE_ERC721,
                     permit.token,
                     permit.id,
                     permit.amount,
@@ -406,6 +416,7 @@ contract PermitC721Test is Test {
             keccak256(
                 abi.encode(
                     SINGLE_USE_PERMIT_TYPEHASH,
+                    TOKEN_TYPE_ERC721,
                     permit.token,
                     permit.id,
                     permit.amount,
@@ -450,6 +461,7 @@ contract PermitC721Test is Test {
             keccak256(
                 abi.encode(
                     SINGLE_USE_PERMIT_TYPEHASH,
+                    TOKEN_TYPE_ERC1155,
                     permit.token,
                     permit.id,
                     permit.amount,
@@ -512,7 +524,7 @@ contract PermitC721Test is Test {
         bytes32 typeHash = keccak256(
             bytes(
                 string.concat(
-                    SINGLE_USE_PERMIT_ADVANCED_TYPEHASH_STUB,
+                    SINGLE_USE_PERMIT_TRANSFER_ADVANCED_TYPEHASH_STUB,
                     additionalDataTypeString
                 )
             )
@@ -523,6 +535,7 @@ contract PermitC721Test is Test {
             keccak256(
                 abi.encode(
                     typeHash,
+                    TOKEN_TYPE_ERC721,
                     permit.token,
                     permit.id,
                     permit.amount,
@@ -589,7 +602,7 @@ contract PermitC721Test is Test {
         bytes32 typeHash = keccak256(
             bytes(
                 string.concat(
-                    SINGLE_USE_PERMIT_ADVANCED_TYPEHASH_STUB,
+                    SINGLE_USE_PERMIT_TRANSFER_ADVANCED_TYPEHASH_STUB,
                     additionalDataTypeString
                 )
             )
@@ -600,6 +613,7 @@ contract PermitC721Test is Test {
             keccak256(
                 abi.encode(
                     typeHash,
+                    TOKEN_TYPE_ERC721,
                     permit.token,
                     permit.id,
                     permit.amount,
@@ -616,7 +630,7 @@ contract PermitC721Test is Test {
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(aliceKey, digest);
         bytes memory signedPermit = abi.encodePacked(r, s, v);
         bytes32 tmpAdditionalData = additionalData;
-        bytes32 additionalDataTypeHash = keccak256(bytes(string.concat(SINGLE_USE_PERMIT_ADVANCED_TYPEHASH_STUB, additionalDataTypeString)));
+        bytes32 additionalDataTypeHash = keccak256(bytes(string.concat(SINGLE_USE_PERMIT_TRANSFER_ADVANCED_TYPEHASH_STUB, additionalDataTypeString)));
 
         permitC.registerAdditionalDataHash(additionalDataTypeString);
 
@@ -656,6 +670,7 @@ contract PermitC721Test is Test {
             keccak256(
                 abi.encode(
                     SINGLE_USE_PERMIT_TYPEHASH,
+                    TOKEN_TYPE_ERC721,
                     permit.token,
                     permit.id,
                     permit.amount,
@@ -721,7 +736,7 @@ contract PermitC721Test is Test {
         bytes32 typeHash = keccak256(
             bytes(
                 string.concat(
-                    SINGLE_USE_PERMIT_ADVANCED_TYPEHASH_STUB,
+                    SINGLE_USE_PERMIT_TRANSFER_ADVANCED_TYPEHASH_STUB,
                     additionalDataTypeString
                 )
             )
@@ -732,6 +747,7 @@ contract PermitC721Test is Test {
             keccak256(
                 abi.encode(
                     typeHash,
+                    TOKEN_TYPE_ERC721,
                     permit.token,
                     permit.id,
                     permit.amount,
@@ -748,7 +764,7 @@ contract PermitC721Test is Test {
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(aliceKey, digest);
         bytes memory signedPermit = abi.encodePacked(r, s, v);
         bytes32 tmpAdditionalData = additionalData;
-        bytes32 additionalDataTypeHash = keccak256(bytes(string.concat(SINGLE_USE_PERMIT_ADVANCED_TYPEHASH_STUB, additionalDataTypeString)));
+        bytes32 additionalDataTypeHash = keccak256(bytes(string.concat(SINGLE_USE_PERMIT_TRANSFER_ADVANCED_TYPEHASH_STUB, additionalDataTypeString)));
 
         permitC.registerAdditionalDataHash(additionalDataTypeString);
 

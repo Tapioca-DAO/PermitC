@@ -10,6 +10,7 @@ interface IPermitC {
      * =================================================
      */
 
+    /// @dev Emitted when an approval is stored
     event Approval(
         address indexed owner,
         address indexed token,
@@ -19,8 +20,10 @@ interface IPermitC {
         uint48 expiration
     );
 
+    /// @dev Emitted when a user increases their master nonce
     event Lockdown(address indexed owner);
 
+    /// @dev Emitted when an order is opened
     event OrderOpened(
         bytes32 indexed orderId,
         address indexed owner,
@@ -28,6 +31,7 @@ interface IPermitC {
         uint256 fillableQuantity
     );
 
+    /// @dev Emitted when an order has a fill
     event OrderFilled(
         bytes32 indexed orderId,
         address indexed owner,
@@ -35,12 +39,14 @@ interface IPermitC {
         uint256 amount
     );
 
+    /// @dev Emitted when an order has been fully filled or cancelled
     event OrderClosed(
         bytes32 indexed orderId, 
         address indexed owner, 
         address indexed operator, 
         bool wasCancellation);
 
+    /// @dev Emitted when an order has an amount restored due to a failed transfer
     event OrderRestored(
         bytes32 indexed orderId,
         address indexed owner,
@@ -52,9 +58,10 @@ interface IPermitC {
      * ============== Approval Transfers ===============
      * =================================================
      */
-    function approve(address token, uint256 id, address operator, uint200 amount, uint48 expiration) external;
+    function approve(uint256 tokenType, address token, uint256 id, address operator, uint200 amount, uint48 expiration) external;
 
     function updateApprovalBySignature(
+        uint256 tokenType,
         address token,
         uint256 id,
         uint256 nonce,
@@ -69,6 +76,7 @@ interface IPermitC {
     function allowance(
         address owner, 
         address operator, 
+        uint256 tokenType,
         address token, 
         uint256 id
     ) external view returns (uint256 amount, uint256 expiration);
@@ -152,7 +160,9 @@ interface IPermitC {
         bytes calldata signedPermit
     ) external returns (bool isError);
 
-    function isRegisteredAdditionalDataHash(bytes32 hash) external view returns (bool isRegistered);
+    function isRegisteredTransferAdditionalDataHash(bytes32 hash) external view returns (bool isRegistered);
+
+    function isRegisteredOrderAdditionalDataHash(bytes32 hash) external view returns (bool isRegistered);
 
     /**
      * =================================================
@@ -186,6 +196,8 @@ interface IPermitC {
 
     function closePermittedOrder(
         address owner,
+        address operator,
+        uint256 tokenType,
         address token,
         uint256 id,
         bytes32 orderId
@@ -194,6 +206,7 @@ interface IPermitC {
     function allowance(
         address owner, 
         address operator, 
+        uint256 tokenType,
         address token, 
         uint256 id,
         bytes32 orderId

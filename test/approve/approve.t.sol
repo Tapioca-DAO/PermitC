@@ -1,4 +1,4 @@
-pragma solidity >=0.8.4 <=0.8.19;
+pragma solidity ^0.8.24;
 
 import "../Base.t.sol";
 
@@ -28,9 +28,9 @@ contract ApproveTest is BaseTest {
 
         vm.expectEmit(true, true, true, true);
         emit Approval(alice, token, bob, 1, 1, expiration);
-        permitC.approve(token, 1, bob, 1, expiration);
+        permitC.approve(TOKEN_TYPE_ERC721, token, 1, bob, 1, expiration);
 
-        (uint256 allowanceBob,) = permitC.allowance(alice, bob, token, 1);
+        (uint256 allowanceBob,) = permitC.allowance(alice, bob, TOKEN_TYPE_ERC721, token, 1);
         assertEq(allowanceBob, 1);
         changePrank(admin);
     }
@@ -47,9 +47,9 @@ contract ApproveTest is BaseTest {
 
         vm.expectEmit(true, true, true, true);
         emit Approval(alice, token, bob, 1, 1, uint48(block.timestamp));
-        permitC.approve(token, 1, bob, 1, uint48(block.timestamp));
+        permitC.approve(TOKEN_TYPE_ERC721, token, 1, bob, 1, uint48(block.timestamp));
 
-        (uint256 allowanceBob,) = permitC.allowance(alice, bob, token, 1);
+        (uint256 allowanceBob,) = permitC.allowance(alice, bob, TOKEN_TYPE_ERC721, token, 1);
         assertEq(allowanceBob, 1);
         changePrank(admin);
     }
@@ -70,17 +70,17 @@ contract ApproveTest is BaseTest {
 
         vm.expectEmit(true, true, true, true);
         emit Approval(alice, token, bob, 1, 1, uint48(expiration));
-        permitC.approve(token, 1, bob, 1, uint48(expiration));
+        permitC.approve(TOKEN_TYPE_ERC721, token, 1, bob, 1, uint48(expiration));
 
         vm.warp(expiration - 500);
 
-        (uint256 allowanceBob, uint256 allowanceExpiration) = permitC.allowance(alice, bob, token, 1);
+        (uint256 allowanceBob, uint256 allowanceExpiration) = permitC.allowance(alice, bob, TOKEN_TYPE_ERC721, token, 1);
         assertEq(allowanceBob, 1);
         assertEq(allowanceExpiration, expiration);
 
         vm.warp(expiration + 1);
 
-        (allowanceBob, allowanceExpiration) = permitC.allowance(alice, bob, token, 1);
+        (allowanceBob, allowanceExpiration) = permitC.allowance(alice, bob, TOKEN_TYPE_ERC721, token, 1);
         assertEq(allowanceBob, 0);
 
         changePrank(admin);
@@ -98,16 +98,16 @@ contract ApproveTest is BaseTest {
 
         vm.expectEmit(true, true, true, true);
         emit Approval(alice, token, bob, 1, 1, uint48(block.timestamp));
-        permitC.approve(token, 1, bob, 1, uint48(block.timestamp));
+        permitC.approve(TOKEN_TYPE_ERC721, token, 1, bob, 1, uint48(block.timestamp));
 
         vm.warp(block.timestamp);
 
-        (uint256 allowanceBob,) = permitC.allowance(alice, bob, token, 1);
+        (uint256 allowanceBob,) = permitC.allowance(alice, bob, TOKEN_TYPE_ERC721, token, 1);
         assertEq(allowanceBob, 1);
 
         vm.warp(block.timestamp + 1);
 
-        (allowanceBob,) = permitC.allowance(alice, bob, token, 1);
+        (allowanceBob,) = permitC.allowance(alice, bob, TOKEN_TYPE_ERC721, token, 1);
         assertEq(allowanceBob, 0);
         changePrank(admin);
     }
@@ -125,9 +125,9 @@ contract ApproveTest is BaseTest {
 
         vm.expectEmit(true, true, true, true);
         emit Approval(alice, token, bob, 1, 1, expiration);
-        permitC.approve(token, 1, bob, 1, expiration);
+        permitC.approve(TOKEN_TYPE_ERC721, token, 1, bob, 1, expiration);
 
-        (uint256 allowanceBob,) = permitC.allowance(alice, bob, token, 1);
+        (uint256 allowanceBob,) = permitC.allowance(alice, bob, TOKEN_TYPE_ERC721, token, 1);
         assertEq(allowanceBob, 1);
         changePrank(admin);
     }
@@ -144,9 +144,9 @@ contract ApproveTest is BaseTest {
 
         vm.expectEmit(true, true, true, true);
         emit Approval(alice, token, bob, 1, 1, uint48(block.timestamp));
-        permitC.approve(token, 1, bob, 1, uint48(block.timestamp));
+        permitC.approve(TOKEN_TYPE_ERC721, token, 1, bob, 1, uint48(block.timestamp));
 
-        (uint256 allowanceBob,) = permitC.allowance(alice, bob, token, 1);
+        (uint256 allowanceBob,) = permitC.allowance(alice, bob, TOKEN_TYPE_ERC721, token, 1);
         assertEq(allowanceBob, 1);
         changePrank(admin);
     }
@@ -167,16 +167,16 @@ contract ApproveTest is BaseTest {
 
         vm.expectEmit(true, true, true, true);
         emit Approval(alice, token, bob, 1, 1, uint48(expiration));
-        permitC.approve(token, 1, bob, 1, uint48(expiration));
+        permitC.approve(TOKEN_TYPE_ERC721, token, 1, bob, 1, uint48(expiration));
 
         vm.warp(expiration - 500);
 
-        (uint256 allowanceBob,) = permitC.allowance(alice, bob, token, 1);
+        (uint256 allowanceBob,) = permitC.allowance(alice, bob, TOKEN_TYPE_ERC721, token, 1);
         assertEq(allowanceBob, 1);
 
         vm.warp(expiration + 1);
 
-        (allowanceBob,) = permitC.allowance(alice, bob, token, 1);
+        (allowanceBob,) = permitC.allowance(alice, bob, TOKEN_TYPE_ERC721, token, 1);
         assertEq(allowanceBob, 0);
         changePrank(admin);
     }
@@ -193,16 +193,16 @@ contract ApproveTest is BaseTest {
 
         vm.expectEmit(true, true, true, true);
         emit Approval(alice, token, bob, 1, 1, uint48(block.timestamp));
-        permitC.approve(token, 1, bob, 1, uint48(block.timestamp));
+        permitC.approve(TOKEN_TYPE_ERC721, token, 1, bob, 1, uint48(block.timestamp));
 
         vm.warp(block.timestamp);
 
-        (uint256 allowanceBob,) = permitC.allowance(alice, bob, token, 1);
+        (uint256 allowanceBob,) = permitC.allowance(alice, bob, TOKEN_TYPE_ERC721, token, 1);
         assertEq(allowanceBob, 1);
 
         vm.warp(block.timestamp + 1);
 
-        (allowanceBob,) = permitC.allowance(alice, bob, token, 1);
+        (allowanceBob,) = permitC.allowance(alice, bob, TOKEN_TYPE_ERC721, token, 1);
         assertEq(allowanceBob, 0);
         changePrank(admin);
     }

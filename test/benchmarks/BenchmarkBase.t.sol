@@ -15,6 +15,7 @@ import {MainnetMetering} from "forge-gas-metering/src/MainnetMetering.sol";
 
 contract BenchmarkBase is MainnetMetering, Test {
     struct TransferPermit {
+        uint256 tokenType;
         address token;
         uint256 id;
         uint256 amount;
@@ -42,8 +43,10 @@ contract BenchmarkBase is MainnetMetering, Test {
     TestERC20 token20;
     ContractMock operator;
 
+    uint256 adminKey;
     uint160 internal alicePk = 0xa11ce;
     uint160 internal bobPk = 0xb0b;
+    address admin;
     address payable internal alice = payable(vm.addr(alicePk));
     address payable internal bob = payable(vm.addr(bobPk));
 
@@ -52,13 +55,15 @@ contract BenchmarkBase is MainnetMetering, Test {
     mapping (address => uint256) internal _nonces;
 
     bytes32 constant MOAR_DATA_HASH = bytes32(0x15978d334b98e79a31905990c775bcf838d5f3b17662696ebc3caa71f9b58404);
-    bytes32 constant MOAR_DATA_PERMIT_HASH = bytes32(0x585369b11932ef54806b5909738c52d4e5f247a909a911bc80018a19ac879cb1);
+    bytes32 constant MOAR_DATA_PERMIT_HASH = keccak256("PermitTransferFromWithAdditionalData(uint256 tokenType,address token,uint256 id,uint256 amount,uint256 nonce,address operator,uint256 expiration,uint256 masterNonce,MoarData data)MoarData(uint256 one,uint256 two,uint256 three,uint256 four,uint256 five,uint256 six)");
     string constant MOAR_DATA_TYPE_STRING = "MoarData data)MoarData(uint256 one,uint256 two,uint256 three,uint256 four,uint256 five,uint256 six)";
 
     function setUp() public virtual {
         setUpMetering({verbose: false});
 
-        permitC = new PermitC("PermitC", "1");
+        (admin, adminKey) = makeAddrAndKey("admin");
+
+        permitC = new PermitC("PermitC", "1", admin, 5 ether);
         token20 = new TestERC20();
         operator = new ContractMock();
 
@@ -170,6 +175,7 @@ contract BenchmarkBase is MainnetMetering, Test {
 
         for (uint256 i = 0; i < runs; i++) {
             TransferPermit memory permitRequest = TransferPermit({
+                tokenType: TOKEN_TYPE_ERC20,
                 token: address(token20),
                 id: 0,
                 amount: BENCHMARK_TRANSFER_AMOUNT,
@@ -228,6 +234,7 @@ contract BenchmarkBase is MainnetMetering, Test {
 
         for (uint256 i = 0; i < runs; i++) {
             TransferPermit memory permitRequest = TransferPermit({
+                tokenType: TOKEN_TYPE_ERC20,
                 token: address(token20),
                 id: 0,
                 amount: BENCHMARK_TRANSFER_AMOUNT,
@@ -293,6 +300,7 @@ contract BenchmarkBase is MainnetMetering, Test {
 
         for (uint256 i = 0; i < runs; i++) {
             TransferPermit memory permitRequest = TransferPermit({
+                tokenType: TOKEN_TYPE_ERC20,
                 token: address(token20),
                 id: 0,
                 amount: BENCHMARK_TRANSFER_AMOUNT,
@@ -308,6 +316,7 @@ contract BenchmarkBase is MainnetMetering, Test {
                 _record();
                 vm.prank(alice);
                 permitC.approve(
+                    permitRequest.tokenType,
                     permitRequest.token,
                     permitRequest.id,
                     permitRequest.operator,
@@ -320,7 +329,8 @@ contract BenchmarkBase is MainnetMetering, Test {
                     from: alice,
                     to: address(permitC),
                     callData: abi.encodeWithSignature(
-                        "approve(address,uint256,address,uint200,uint48)", 
+                        "approve(uint256,address,uint256,address,uint200,uint48)", 
+                        permitRequest.tokenType,
                         permitRequest.token,
                         permitRequest.id,
                         permitRequest.operator,
@@ -343,6 +353,7 @@ contract BenchmarkBase is MainnetMetering, Test {
 
         for (uint256 i = 0; i < runs; i++) {
             TransferPermit memory permitRequest = TransferPermit({
+                tokenType: TOKEN_TYPE_ERC20,
                 token: address(token20),
                 id: 0,
                 amount: BENCHMARK_TRANSFER_AMOUNT,
@@ -360,6 +371,7 @@ contract BenchmarkBase is MainnetMetering, Test {
                 _record();
                 vm.prank(alice);
                 permitC.updateApprovalBySignature(
+                    permitRequest.tokenType,
                     permitRequest.token,
                     permitRequest.id,
                     permitRequest.nonce,
@@ -376,7 +388,8 @@ contract BenchmarkBase is MainnetMetering, Test {
                     from: alice,
                     to: address(permitC),
                     callData: abi.encodeWithSignature(
-                        "updateApprovalBySignature(address,uint256,uint256,uint200,address,uint48,uint48,address,bytes)", 
+                        "updateApprovalBySignature(uint256,address,uint256,uint256,uint200,address,uint48,uint48,address,bytes)", 
+                        permitRequest.tokenType,
                         permitRequest.token,
                         permitRequest.id,
                         permitRequest.nonce,
@@ -403,6 +416,7 @@ contract BenchmarkBase is MainnetMetering, Test {
 
         for (uint256 i = 0; i < runs; i++) {
             TransferPermit memory permitRequest = TransferPermit({
+                tokenType: TOKEN_TYPE_ERC20,
                 token: address(token20),
                 id: 0,
                 amount: BENCHMARK_TRANSFER_AMOUNT,
@@ -449,21 +463,22 @@ contract BenchmarkBase is MainnetMetering, Test {
     function _getSignedSingleUseTransferPermit(
         TransferPermit memory permitRequest
     ) internal view returns (bytes memory signedPermit) {
+        uint256 masterNonce = permitC.masterNonce(vm.addr(permitRequest.signerKey));
         bytes32 digest = ECDSA.toTypedDataHash(
             permitC.domainSeparatorV4(),
             keccak256(
                 abi.encode(
                     SINGLE_USE_PERMIT_TYPEHASH,
+                    permitRequest.tokenType,
                     permitRequest.token,
                     permitRequest.id,
                     permitRequest.amount,
                     permitRequest.nonce,
                     permitRequest.operator,
                     permitRequest.expiration,
-                    permitC.masterNonce(vm.addr(permitRequest.signerKey))
+                    masterNonce)
                 )
-            )
-        );
+            );
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(permitRequest.signerKey, digest);
         signedPermit = abi.encodePacked(r, s, v);
@@ -480,6 +495,7 @@ contract BenchmarkBase is MainnetMetering, Test {
                 bytes.concat(
                     abi.encode(
                         MOAR_DATA_PERMIT_HASH,
+                        permitRequest.tokenType,
                         permitRequest.token,
                         permitRequest.id,
                         permitRequest.amount,
@@ -508,6 +524,7 @@ contract BenchmarkBase is MainnetMetering, Test {
                 bytes.concat(
                     abi.encode(
                         UPDATE_APPROVAL_TYPEHASH,
+                        permitRequest.tokenType,
                         permitRequest.token,
                         permitRequest.id,
                         permitRequest.amount,

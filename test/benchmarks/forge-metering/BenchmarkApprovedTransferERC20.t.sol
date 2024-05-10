@@ -9,6 +9,7 @@ contract ForgeBenchmarkApprovedTransferERC20 is BenchmarkBase {
 
         vm.prank(alice);
         permitC.approve(
+            TOKEN_TYPE_ERC20,
             address(token20),
             0,
             address(operator),
