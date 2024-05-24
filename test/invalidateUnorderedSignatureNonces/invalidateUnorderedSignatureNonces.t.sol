@@ -1,4 +1,4 @@
-pragma solidity ^0.8.24;
+pragma solidity ^0.8.22;
 
 import "../Base.t.sol";
 
@@ -17,7 +17,7 @@ contract invalidateUnorderedSignaturelNonceTest is BaseTest {
         _;
     }
 
-    function testinvalidateUnorderedNonce() whenNonceIsValid public {
+    function testinvalidateUnorderedNonce() public whenNonceIsValid {
         assertEq(permitC.isValidUnorderedNonce(alice, 0), true);
 
         vm.prank(alice);
@@ -26,10 +26,10 @@ contract invalidateUnorderedSignaturelNonceTest is BaseTest {
         assertEq(permitC.isValidUnorderedNonce(alice, 0), false);
     }
 
-    function testinvalidateUnorderedNonce_InvalidNonce() whenNonceIsInvalid public {
+    function testinvalidateUnorderedNonce_InvalidNonce() public whenNonceIsInvalid {
         vm.prank(alice);
         permitC.invalidateUnorderedNonce(0);
-        
+
         assertEq(permitC.isValidUnorderedNonce(alice, 0), false);
 
         vm.prank(alice);
@@ -39,7 +39,7 @@ contract invalidateUnorderedSignaturelNonceTest is BaseTest {
         assertEq(permitC.isValidUnorderedNonce(alice, 0), false);
     }
 
-    function testinvalidateUnorderedNonce_MultipleSpaced() whenNonceIsValid public {
+    function testinvalidateUnorderedNonce_MultipleSpaced() public whenNonceIsValid {
         for (uint256 i = 0; i <= 512; i++) {
             assertEq(permitC.isValidUnorderedNonce(alice, i), true);
         }
@@ -52,7 +52,10 @@ contract invalidateUnorderedSignaturelNonceTest is BaseTest {
         vm.stopPrank();
 
         for (uint256 i = 0; i <= 512; i++) {
-            assertEq(permitC.isValidUnorderedNonce(alice, i), i == 0 ? false : i == 2 ? false : i == 257 ? false : i == 280 ? false : true);
+            assertEq(
+                permitC.isValidUnorderedNonce(alice, i),
+                i == 0 ? false : i == 2 ? false : i == 257 ? false : i == 280 ? false : true
+            );
         }
     }
 }

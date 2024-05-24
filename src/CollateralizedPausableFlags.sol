@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: MIT
-pragma solidity ^0.8.24;
+pragma solidity ^0.8.22;
 
 /*
                                                      @@@@@@@@@@@@@@             
@@ -65,7 +65,6 @@ pragma solidity ^0.8.24;
 *              against those methods when pausing is required.
 */
 abstract contract CollateralizedPausableFlags {
-
     /// @dev Emitted when the pausable flags are updated
     event PausableFlagsUpdated(uint256 previousFlags, uint256 newFlags);
 
@@ -89,11 +88,11 @@ abstract contract CollateralizedPausableFlags {
     function() internal view returns (uint256) immutable _getPausableFlags;
 
     constructor(uint256 _nativeValueToCheckPauseState) {
-        // Optimizes value check at runtime by reducing the stored immutable 
-        // value by 1 so that greater than can be used instead of greater 
-        // than or equal while allowing the deployment parameter to reflect 
+        // Optimizes value check at runtime by reducing the stored immutable
+        // value by 1 so that greater than can be used instead of greater
+        // than or equal while allowing the deployment parameter to reflect
         // the value at which the deployer wants to trigger pause checking.
-        // Example: 
+        // Example:
         //     Constructed with a value of 1000
         //     Immutable value stored is 999
         //     State checking enabled at 1000 units deposited because
@@ -117,7 +116,7 @@ abstract contract CollateralizedPausableFlags {
     /**
      * @dev  Modifier to make a function callable only when the specified flags are not paused
      * @dev  Throws when any of the flags specified are paused
-     * 
+     *
      * @param _flags  The flags to check for pause state
      */
     modifier whenNotPaused(uint256 _flags) {
@@ -128,7 +127,7 @@ abstract contract CollateralizedPausableFlags {
     /**
      * @dev  Modifier to make a function callable only when the specified flags are paused
      * @dev  Throws when any of the flags specified are not paused
-     * 
+     *
      * @param _flags  The flags to check for pause state
      */
     modifier whenPaused(uint256 _flags) {
@@ -147,16 +146,16 @@ abstract contract CollateralizedPausableFlags {
 
     /**
      * @notice  Updates the pausable flags settings
-     * 
+     *
      * @dev     Throws when the caller does not have permission
-     * @dev     **NOTE:** Pausable flag settings will only take effect if contract balance exceeds 
+     * @dev     **NOTE:** Pausable flag settings will only take effect if contract balance exceeds
      * @dev     `nativeValueToPause`
-     * 
+     *
      * @dev     <h4>Postconditions:</h4>
      * @dev     1. address(this).balance increases by msg.value
      * @dev     2. `pausableFlags` is set to the new value
      * @dev     3. Emits a PausableFlagsUpdated event
-     * 
+     *
      * @param _pausableFlags  The new pausable flags to set
      */
     function pause(uint256 _pausableFlags) external payable onlyPausePermissionedCaller {
@@ -165,7 +164,7 @@ abstract contract CollateralizedPausableFlags {
 
     /**
      * @notice  Allows any account to supply funds for enabling the pausable checks
-     * 
+     *
      * @dev     **NOTE:** The threshold check for pausable collateral does not pause
      * @dev     any functions unless the associated pausable flag is set.
      */
@@ -175,14 +174,14 @@ abstract contract CollateralizedPausableFlags {
 
     /**
      * @notice  Resets all pausable flags to unpaused and withdraws funds
-     * 
+     *
      * @dev     Throws when the caller does not have permission
-     * 
+     *
      * @dev     <h4>Postconditions:</h4>
      * @dev     1. `pausableFlags` is set to zero
      * @dev     2. Emits a PausableFlagsUpdated event
      * @dev     3. Transfers `withdrawAmount` of native funds to `withdrawTo` if non-zero
-     * 
+     *
      * @param withdrawTo      The address to withdraw the collateral to
      * @param withdrawAmount  The amount of collateral to withdraw
      */
@@ -190,21 +189,22 @@ abstract contract CollateralizedPausableFlags {
         _setPausableFlags(0);
 
         if (withdrawAmount > 0) {
-            (bool success, ) = withdrawTo.call{value: withdrawAmount}("");
-            if(!success) revert CollateralizedPausableFlags__WithdrawFailed();
+            (bool success,) = withdrawTo.call{value: withdrawAmount}("");
+            if (!success) revert CollateralizedPausableFlags__WithdrawFailed();
         }
     }
 
     /**
      * @notice  Returns collateralized pausable configuration information
-     * 
+     *
      * @return _nativeValueToCheckPauseState  The collateral required to enable pause state checking
      * @return _pausableFlags                 The current pausable flags set, only checked when collateral met
      */
-    function pausableConfigurationSettings() external view returns(
-        uint256 _nativeValueToCheckPauseState, 
-        uint256 _pausableFlags
-    ) {
+    function pausableConfigurationSettings()
+        external
+        view
+        returns (uint256 _nativeValueToCheckPauseState, uint256 _pausableFlags)
+    {
         unchecked {
             _nativeValueToCheckPauseState = nativeValueToCheckPauseState + 1;
             _pausableFlags = pausableFlags;
@@ -213,7 +213,7 @@ abstract contract CollateralizedPausableFlags {
 
     /**
      * @notice  Updates the `pausableFlags` variable and emits a PausableFlagsUpdated event
-     * 
+     *
      * @param _pausableFlags  The new pausable flags to set
      */
     function _setPausableFlags(uint256 _pausableFlags) internal {
@@ -226,11 +226,11 @@ abstract contract CollateralizedPausableFlags {
 
     /**
      * @notice  Checks the current pause state of the supplied flags and reverts if any are paused
-     * 
+     *
      * @dev     *Should* be called prior to any transfers of native funds out of the contract for efficiency
      * @dev     Throws when the native funds balance is greater than the value to enable pausing AND
      * @dev     one or more of the supplied `_flags` is paused.
-     * 
+     *
      * @param _flags  The flags to check for pause state
      */
     function _requireNotPausedWithCollateralCheck(uint256 _flags) private view {
@@ -243,9 +243,9 @@ abstract contract CollateralizedPausableFlags {
 
     /**
      * @notice  Checks the current pause state of the supplied flags and reverts if any are paused
-     * 
+     *
      * @dev     Throws when one or more of the supplied `_flags` is paused.
-     * 
+     *
      * @param _flags  The flags to check for pause state
      */
     function _requireNotPausedWithoutCollateralCheck(uint256 _flags) private view {
@@ -256,11 +256,11 @@ abstract contract CollateralizedPausableFlags {
 
     /**
      * @notice  Checks the current pause state of the supplied flags and reverts if none are paused
-     * 
+     *
      * @dev     *Should* be called prior to any transfers of native funds out of the contract for efficiency
      * @dev     Throws when the native funds balance is not greater than the value to enable pausing OR
      * @dev     none of the supplied `_flags` are paused.
-     * 
+     *
      * @param _flags  The flags to check for pause state
      */
     function _requirePausedWithCollateralCheck(uint256 _flags) private view {
@@ -273,9 +273,9 @@ abstract contract CollateralizedPausableFlags {
 
     /**
      * @notice  Checks the current pause state of the supplied flags and reverts if none are paused
-     * 
+     *
      * @dev     Throws when none of the supplied `_flags` are paused.
-     * 
+     *
      * @param _flags  The flags to check for pause state
      */
     function _requirePausedWithoutCollateralCheck(uint256 _flags) private view {
@@ -286,12 +286,12 @@ abstract contract CollateralizedPausableFlags {
 
     /**
      * @notice  Returns the current state of the pausable flags
-     * 
+     *
      * @dev     Will return zero if the native funds balance is not greater than the value to enable pausing
-     * 
+     *
      * @return _pausableFlags  The current state of the pausable flags
      */
-    function _getPausableFlagsWithCollateralCheck() private view returns(uint256 _pausableFlags) {
+    function _getPausableFlagsWithCollateralCheck() private view returns (uint256 _pausableFlags) {
         if (_nativeBalanceSubMsgValue() > nativeValueToCheckPauseState) {
             _pausableFlags = pausableFlags;
         }
@@ -299,16 +299,16 @@ abstract contract CollateralizedPausableFlags {
 
     /**
      * @notice  Returns the current state of the pausable flags
-     * 
+     *
      * @return _pausableFlags  The current state of the pausable flags
      */
-    function _getPausableFlagsWithoutCollateralCheck() private view returns(uint256 _pausableFlags) {
+    function _getPausableFlagsWithoutCollateralCheck() private view returns (uint256 _pausableFlags) {
         _pausableFlags = pausableFlags;
     }
 
     /**
      * @notice  Returns the current contract balance minus the value sent with the call
-     * 
+     *
      * @dev     This is expected to be the contract balance at the beginning of a function call
      * @dev     to efficiently determine whether a contract has the necessary collateral to enable
      * @dev     the pausable flags checking for contracts that hold native token funds.
@@ -322,10 +322,10 @@ abstract contract CollateralizedPausableFlags {
     }
 
     /**
-     * @dev  To be implemented by an inheriting contract for authorization to `pause` and `unpause` 
+     * @dev  To be implemented by an inheriting contract for authorization to `pause` and `unpause`
      * @dev  functions as well as any functions in the inheriting contract that utilize the
      * @dev  `onlyPausePermissionedCaller` modifier.
-     * 
+     *
      * @dev  Implementing contract function **MUST** throw when the caller is not permissioned
      */
     function _requireCallerHasPausePermissions() internal view virtual;

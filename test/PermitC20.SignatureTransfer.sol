@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.24;
+pragma solidity ^0.8.22;
 
 import "./Base.t.sol";
 import "../src/PermitC.sol";
@@ -11,7 +11,6 @@ import "./mocks/ERC20Mock.sol";
 import "./mocks/ERC20Reverter.sol";
 
 contract PermitC20SignatureTransfer is BaseTest {
-
     enum OrderProtocols {
         ERC721_FILL_OR_KILL,
         ERC1155_FILL_OR_KILL,
@@ -29,7 +28,6 @@ contract PermitC20SignatureTransfer is BaseTest {
         uint256 nonce;
     }
 
-    
     struct PermitSignatureDetails {
         // Collection Address
         address token;
@@ -63,7 +61,8 @@ contract PermitC20SignatureTransfer is BaseTest {
 
     TestData private testData;
 
-    string constant additionalDataTypeString = "SaleApproval approval)SaleApproval(uint8 protocol,address seller,address marketplace,address paymentMethod,address tokenAddress,uint256 tokenId,uint256 amount,uint256 itemPrice,uint256 expiration,uint256 marketplaceFeeNumerator,uint256 maxRoyaltyFeeNumerator,uint256 nonce,uint256 masterNonce)";
+    string constant additionalDataTypeString =
+        "SaleApproval approval)SaleApproval(uint8 protocol,address seller,address marketplace,address paymentMethod,address tokenAddress,uint256 tokenId,uint256 amount,uint256 itemPrice,uint256 expiration,uint256 marketplaceFeeNumerator,uint256 maxRoyaltyFeeNumerator,uint256 nonce,uint256 masterNonce)";
 
     SaleApproval approval;
 
@@ -142,10 +141,11 @@ contract PermitC20SignatureTransfer is BaseTest {
         });
     }
 
-    function testPermitSignatureDetails_ERC20_base(uint48 expiration_, bytes32 orderId_) 
-      public
-      whenExpirationIsInTheFuture(expiration_)
-      whenTokenIsERC20() {
+    function testPermitSignatureDetails_ERC20_base(uint48 expiration_, bytes32 orderId_)
+        public
+        whenExpirationIsInTheFuture(expiration_)
+        whenTokenIsERC20
+    {
         _mint20(testData.token, alice, testData.amount);
 
         assertEq(ERC20(testData.token).balanceOf(testData.owner), testData.amount);
@@ -175,11 +175,11 @@ contract PermitC20SignatureTransfer is BaseTest {
 
         changePrank(testData.spender);
         permitC.permitTransferFromERC20(
-            testData.token, 
-            testData.nonce, 
-            testData.amount, 
-            testData.expiration, 
-            testData.owner, 
+            testData.token,
+            testData.nonce,
+            testData.amount,
+            testData.expiration,
+            testData.owner,
             testData.spender,
             testData.amount,
             signedPermit
@@ -189,10 +189,11 @@ contract PermitC20SignatureTransfer is BaseTest {
         assertEq(ERC20(testData.token).balanceOf(testData.spender), testData.amount);
     }
 
-    function testPermitSignatureDetails_ERC20_multipleNonces(uint48 expiration_) 
-      public
-      whenExpirationIsInTheFuture(expiration_)
-      whenTokenIsERC20() {
+    function testPermitSignatureDetails_ERC20_multipleNonces(uint48 expiration_)
+        public
+        whenExpirationIsInTheFuture(expiration_)
+        whenTokenIsERC20
+    {
         _mint20(testData.token, testData.owner, testData.amount * 2);
 
         assertEq(ERC20(testData.token).balanceOf(testData.owner), testData.amount * 2);
@@ -222,11 +223,11 @@ contract PermitC20SignatureTransfer is BaseTest {
 
         vm.startPrank(testData.spender);
         permitC.permitTransferFromERC20(
-            testData.token, 
-            testData.nonce, 
+            testData.token,
+            testData.nonce,
             testData.amount,
-            testData.expiration, 
-            testData.owner, 
+            testData.expiration,
+            testData.owner,
             testData.spender,
             testData.amount,
             signedPermit
@@ -255,15 +256,17 @@ contract PermitC20SignatureTransfer is BaseTest {
             )
         );
         bytes memory signedPermit2;
-        {(uint8 v2, bytes32 r2, bytes32 s2) = vm.sign(aliceKey, digest2);
-        signedPermit2 = abi.encodePacked(r2, s2, v2);}
+        {
+            (uint8 v2, bytes32 r2, bytes32 s2) = vm.sign(aliceKey, digest2);
+            signedPermit2 = abi.encodePacked(r2, s2, v2);
+        }
 
         permitC.permitTransferFromERC20(
-            testData.token, 
-            testData.nonce + 1, 
+            testData.token,
+            testData.nonce + 1,
             testData.amount,
-            testData.expiration, 
-            testData.owner, 
+            testData.expiration,
+            testData.owner,
             testData.spender,
             testData.amount,
             signedPermit2
@@ -275,9 +278,10 @@ contract PermitC20SignatureTransfer is BaseTest {
     }
 
     function testPermitSignatureDetails_ERC20_Expired(uint48 expiration_)
-      whenTokenIsERC20()
-      whenExpirationIsInThePast(expiration_)
-      public {
+        public
+        whenTokenIsERC20
+        whenExpirationIsInThePast(expiration_)
+    {
         _mint20(testData.token, testData.owner, testData.amount);
 
         assertEq(ERC20(testData.token).balanceOf(testData.owner), testData.amount);
@@ -308,13 +312,13 @@ contract PermitC20SignatureTransfer is BaseTest {
         changePrank(testData.spender);
         vm.expectRevert(PermitC__SignatureTransferExceededPermitExpired.selector);
         permitC.permitTransferFromERC20(
-            testData.token, 
-            testData.nonce, 
-            testData.amount, 
-            testData.expiration, 
-            testData.owner, 
-            testData.spender, 
-            testData.amount, 
+            testData.token,
+            testData.nonce,
+            testData.amount,
+            testData.expiration,
+            testData.owner,
+            testData.spender,
+            testData.amount,
             signedPermit
         );
 
@@ -322,9 +326,10 @@ contract PermitC20SignatureTransfer is BaseTest {
     }
 
     function testPermitSignatureDetails_ERC20_UsedNonce(uint48 expiration_)
-      whenTokenIsERC20()
-      whenExpirationIsInTheFuture(expiration_)
-      public {
+        public
+        whenTokenIsERC20
+        whenExpirationIsInTheFuture(expiration_)
+    {
         _mint20(testData.token, testData.owner, testData.amount);
 
         assertEq(ERC20(testData.token).balanceOf(testData.owner), testData.amount);
@@ -354,13 +359,13 @@ contract PermitC20SignatureTransfer is BaseTest {
 
         changePrank(testData.spender);
         permitC.permitTransferFromERC20(
-            testData.token, 
-            testData.nonce, 
-            testData.amount, 
-            testData.expiration, 
-            testData.owner, 
-            testData.spender, 
-            testData.amount, 
+            testData.token,
+            testData.nonce,
+            testData.amount,
+            testData.expiration,
+            testData.owner,
+            testData.spender,
+            testData.amount,
             signedPermit
         );
 
@@ -371,13 +376,13 @@ contract PermitC20SignatureTransfer is BaseTest {
 
         vm.expectRevert(PermitC__NonceAlreadyUsedOrRevoked.selector);
         permitC.permitTransferFromERC20(
-            testData.token, 
-            testData.nonce, 
-            testData.amount, 
-            testData.expiration, 
-            testData.owner, 
-            testData.spender, 
-            testData.amount, 
+            testData.token,
+            testData.nonce,
+            testData.amount,
+            testData.expiration,
+            testData.owner,
+            testData.spender,
+            testData.amount,
             signedPermit
         );
 
@@ -385,9 +390,10 @@ contract PermitC20SignatureTransfer is BaseTest {
     }
 
     function testPermitSignatureDetails_ERC20_InvalidatedNonce(uint48 expiration_)
-      whenTokenIsERC20()
-      whenExpirationIsInTheFuture(expiration_)
-      public {
+        public
+        whenTokenIsERC20
+        whenExpirationIsInTheFuture(expiration_)
+    {
         _mint20(testData.token, testData.owner, testData.amount);
 
         assertEq(ERC20(testData.token).balanceOf(testData.owner), testData.amount);
@@ -420,15 +426,25 @@ contract PermitC20SignatureTransfer is BaseTest {
 
         changePrank(testData.spender);
         vm.expectRevert(PermitC__NonceAlreadyUsedOrRevoked.selector);
-        permitC.permitTransferFromERC20(testData.token, testData.nonce, testData.amount, testData.expiration, testData.owner, testData.spender, testData.amount, signedPermit);
+        permitC.permitTransferFromERC20(
+            testData.token,
+            testData.nonce,
+            testData.amount,
+            testData.expiration,
+            testData.owner,
+            testData.spender,
+            testData.amount,
+            signedPermit
+        );
 
         assertEq(ERC20(testData.token).balanceOf(testData.owner), testData.amount);
     }
 
     function testPermitSignatureDetails_ERC20_InvalidSignature(uint48 expiration_)
-      whenExpirationIsInTheFuture(expiration_)
-      whenTokenIsERC20()
-      public {
+        public
+        whenExpirationIsInTheFuture(expiration_)
+        whenTokenIsERC20
+    {
         _mint20(testData.token, testData.owner, testData.amount);
 
         assertEq(ERC20(testData.token).balanceOf(testData.owner), testData.amount);
@@ -458,13 +474,13 @@ contract PermitC20SignatureTransfer is BaseTest {
         changePrank(testData.spender);
         vm.expectRevert(PermitC__SignatureTransferInvalidSignature.selector);
         permitC.permitTransferFromERC20(
-            testData.token, 
-            testData.nonce, 
-            testData.amount, 
-            testData.expiration, 
-            testData.owner, 
-            testData.spender, 
-            testData.amount, 
+            testData.token,
+            testData.nonce,
+            testData.amount,
+            testData.expiration,
+            testData.owner,
+            testData.spender,
+            testData.amount,
             signedPermit
         );
 
@@ -472,9 +488,10 @@ contract PermitC20SignatureTransfer is BaseTest {
     }
 
     function testPermitSignatureDetailsWithAdditionalData_ERC20_PrecomputedHash_NotRegistered()
-      whenTokenIsERC20()
-      whenExpirationIsInTheFuture(testData.expiration)
-      public {
+        public
+        whenTokenIsERC20
+        whenExpirationIsInTheFuture(testData.expiration)
+    {
         _mint20(testData.token, testData.owner, testData.amount);
 
         assertEq(ERC20(testData.token).balanceOf(testData.owner), testData.amount);
@@ -482,34 +499,28 @@ contract PermitC20SignatureTransfer is BaseTest {
         changePrank(testData.owner);
         ERC20(testData.token).approve(address(permitC), testData.amount);
         approval.tokenAddress = testData.token;
-        
+
         bytes32 additionalData = keccak256(
             abi.encode(
-                uint8(0), 
-                approval.seller, 
-                approval.marketplace, 
-                approval.paymentMethod, 
-                approval.tokenAddress, 
-                approval.tokenId, 
-                approval.amount, 
+                uint8(0),
+                approval.seller,
+                approval.marketplace,
+                approval.paymentMethod,
+                approval.tokenAddress,
+                approval.tokenId,
+                approval.amount,
                 approval.itemPrice,
-                approval.expiration, 
-                approval.marketplaceFeeNumerator, 
-                approval.maxRoyaltyFeeNumerator, 
-                approval.nonce, 
+                approval.expiration,
+                approval.marketplaceFeeNumerator,
+                approval.maxRoyaltyFeeNumerator,
+                approval.nonce,
                 approval.masterNonce
             )
         );
 
-        bytes32 typeHash = keccak256(
-            bytes(
-                string.concat(
-                    SINGLE_USE_PERMIT_TRANSFER_ADVANCED_TYPEHASH_STUB,
-                    additionalDataTypeString
-                )
-            )
-        );
-        
+        bytes32 typeHash =
+            keccak256(bytes(string.concat(SINGLE_USE_PERMIT_TRANSFER_ADVANCED_TYPEHASH_STUB, additionalDataTypeString)));
+
         bytes32 digest = ECDSA.toTypedDataHash(
             permitC.domainSeparatorV4(),
             keccak256(
@@ -527,7 +538,6 @@ contract PermitC20SignatureTransfer is BaseTest {
                 )
             )
         );
-
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(aliceKey, digest);
         bytes memory signedPermit = abi.encodePacked(r, s, v);
@@ -537,15 +547,24 @@ contract PermitC20SignatureTransfer is BaseTest {
         changePrank(testData.spender);
         vm.expectRevert(PermitC__SignatureTransferPermitHashNotRegistered.selector);
         permitC.permitTransferFromWithAdditionalDataERC20(
-            testData.token, testData.amount, testData.nonce, testData.expiration, 
-            testData.owner, testData.spender, testData.amount,  tmpAdditionalData, additionalDataTypeHash, signedPermit
+            testData.token,
+            testData.amount,
+            testData.nonce,
+            testData.expiration,
+            testData.owner,
+            testData.spender,
+            testData.amount,
+            tmpAdditionalData,
+            additionalDataTypeHash,
+            signedPermit
         );
     }
 
-    function testPermitSignatureDetailsWithAdditionalData_ERC20_PrecomputedHash_Registered() 
-      whenTokenIsERC20()
-      whenExpirationIsInTheFuture(testData.expiration)
-      public {
+    function testPermitSignatureDetailsWithAdditionalData_ERC20_PrecomputedHash_Registered()
+        public
+        whenTokenIsERC20
+        whenExpirationIsInTheFuture(testData.expiration)
+    {
         _mint20(testData.token, testData.owner, testData.amount);
 
         assertEq(ERC20(testData.token).balanceOf(testData.owner), testData.amount);
@@ -553,34 +572,28 @@ contract PermitC20SignatureTransfer is BaseTest {
         changePrank(testData.owner);
         ERC20(testData.token).approve(address(permitC), testData.amount);
         approval.tokenAddress = testData.token;
-        
+
         bytes32 additionalData = keccak256(
             abi.encode(
-                uint8(0), 
-                approval.seller, 
-                approval.marketplace, 
-                approval.paymentMethod, 
-                approval.tokenAddress, 
-                approval.tokenId, 
-                approval.amount, 
+                uint8(0),
+                approval.seller,
+                approval.marketplace,
+                approval.paymentMethod,
+                approval.tokenAddress,
+                approval.tokenId,
+                approval.amount,
                 approval.itemPrice,
-                approval.expiration, 
-                approval.marketplaceFeeNumerator, 
-                approval.maxRoyaltyFeeNumerator, 
-                approval.nonce, 
+                approval.expiration,
+                approval.marketplaceFeeNumerator,
+                approval.maxRoyaltyFeeNumerator,
+                approval.nonce,
                 approval.masterNonce
             )
         );
 
-        bytes32 typeHash = keccak256(
-            bytes(
-                string.concat(
-                    SINGLE_USE_PERMIT_TRANSFER_ADVANCED_TYPEHASH_STUB,
-                    additionalDataTypeString
-                )
-            )
-        );
-        
+        bytes32 typeHash =
+            keccak256(bytes(string.concat(SINGLE_USE_PERMIT_TRANSFER_ADVANCED_TYPEHASH_STUB, additionalDataTypeString)));
+
         bytes32 digest = ECDSA.toTypedDataHash(
             permitC.domainSeparatorV4(),
             keccak256(
@@ -599,29 +612,37 @@ contract PermitC20SignatureTransfer is BaseTest {
             )
         );
 
-
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(aliceKey, digest);
         bytes memory signedPermit = abi.encodePacked(r, s, v);
         bytes32 tmpAdditionalData = additionalData;
-        bytes32 additionalDataTypeHash = keccak256(bytes(string.concat(SINGLE_USE_PERMIT_TRANSFER_ADVANCED_TYPEHASH_STUB, additionalDataTypeString)));
+        bytes32 additionalDataTypeHash =
+            keccak256(bytes(string.concat(SINGLE_USE_PERMIT_TRANSFER_ADVANCED_TYPEHASH_STUB, additionalDataTypeString)));
 
         permitC.registerAdditionalDataHash(additionalDataTypeString);
 
         changePrank(testData.spender);
         (bool isError) = permitC.permitTransferFromWithAdditionalDataERC20(
-            testData.token, testData.nonce, testData.amount, testData.expiration, 
-            testData.owner, testData.spender, testData.amount, tmpAdditionalData, additionalDataTypeHash, signedPermit
+            testData.token,
+            testData.nonce,
+            testData.amount,
+            testData.expiration,
+            testData.owner,
+            testData.spender,
+            testData.amount,
+            tmpAdditionalData,
+            additionalDataTypeHash,
+            signedPermit
         );
-
 
         assertEq(ERC20(testData.token).balanceOf(testData.spender), testData.amount);
         assertFalse(isError);
     }
 
     function testPermitSignatureDetails_ERC20_NonceStillActiveAfterRevert()
-      whenTokenIsReverter()
-      whenExpirationIsInTheFuture(testData.expiration)
-      public {
+        public
+        whenTokenIsReverter
+        whenExpirationIsInTheFuture(testData.expiration)
+    {
         _mint20(testData.token, testData.owner, testData.amount);
 
         assertEq(ERC20(testData.token).balanceOf(testData.owner), testData.amount);
@@ -652,7 +673,16 @@ contract PermitC20SignatureTransfer is BaseTest {
         assert(permitC.isValidUnorderedNonce(alice, 0));
 
         vm.startPrank(testData.spender);
-        permitC.permitTransferFromERC20(testData.token, testData.nonce, testData.amount, testData.expiration, testData.owner, testData.spender, testData.amount, signedPermit);
+        permitC.permitTransferFromERC20(
+            testData.token,
+            testData.nonce,
+            testData.amount,
+            testData.expiration,
+            testData.owner,
+            testData.spender,
+            testData.amount,
+            signedPermit
+        );
         vm.stopPrank();
 
         assert(permitC.isValidUnorderedNonce(alice, 0));
@@ -661,9 +691,10 @@ contract PermitC20SignatureTransfer is BaseTest {
     }
 
     function testPermitSignatureDetailsWithAdditionalData_ERC20_NonceStillActiveAfterRevert()
-      whenTokenIsReverter()
-      whenExpirationIsInTheFuture(testData.expiration)
-      public {
+        public
+        whenTokenIsReverter
+        whenExpirationIsInTheFuture(testData.expiration)
+    {
         _mint20(testData.token, testData.owner, testData.amount);
 
         assertEq(ERC20(testData.token).balanceOf(testData.owner), testData.amount);
@@ -671,34 +702,28 @@ contract PermitC20SignatureTransfer is BaseTest {
         changePrank(testData.owner);
         ERC20(testData.token).approve(address(permitC), testData.amount);
         approval.tokenAddress = testData.token;
-        
+
         bytes32 additionalData = keccak256(
             abi.encode(
-                uint8(0), 
-                approval.seller, 
-                approval.marketplace, 
-                approval.paymentMethod, 
-                approval.tokenAddress, 
-                approval.tokenId, 
-                approval.amount, 
+                uint8(0),
+                approval.seller,
+                approval.marketplace,
+                approval.paymentMethod,
+                approval.tokenAddress,
+                approval.tokenId,
+                approval.amount,
                 approval.itemPrice,
-                approval.expiration, 
-                approval.marketplaceFeeNumerator, 
-                approval.maxRoyaltyFeeNumerator, 
-                approval.nonce, 
+                approval.expiration,
+                approval.marketplaceFeeNumerator,
+                approval.maxRoyaltyFeeNumerator,
+                approval.nonce,
                 approval.masterNonce
             )
         );
 
-        bytes32 typeHash = keccak256(
-            bytes(
-                string.concat(
-                    SINGLE_USE_PERMIT_TRANSFER_ADVANCED_TYPEHASH_STUB,
-                    additionalDataTypeString
-                )
-            )
-        );
-        
+        bytes32 typeHash =
+            keccak256(bytes(string.concat(SINGLE_USE_PERMIT_TRANSFER_ADVANCED_TYPEHASH_STUB, additionalDataTypeString)));
+
         bytes32 digest = ECDSA.toTypedDataHash(
             permitC.domainSeparatorV4(),
             keccak256(
@@ -717,18 +742,26 @@ contract PermitC20SignatureTransfer is BaseTest {
             )
         );
 
-
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(aliceKey, digest);
         bytes memory signedPermit = abi.encodePacked(r, s, v);
         bytes32 tmpAdditionalData = additionalData;
-        bytes32 additionalDataTypeHash = keccak256(bytes(string.concat(SINGLE_USE_PERMIT_TRANSFER_ADVANCED_TYPEHASH_STUB, additionalDataTypeString)));
+        bytes32 additionalDataTypeHash =
+            keccak256(bytes(string.concat(SINGLE_USE_PERMIT_TRANSFER_ADVANCED_TYPEHASH_STUB, additionalDataTypeString)));
 
         permitC.registerAdditionalDataHash(additionalDataTypeString);
 
         changePrank(testData.spender);
         (bool isError) = permitC.permitTransferFromWithAdditionalDataERC20(
-            testData.token, testData.nonce, testData.amount, testData.expiration, 
-            testData.owner, testData.spender, testData.amount, tmpAdditionalData, additionalDataTypeHash, signedPermit
+            testData.token,
+            testData.nonce,
+            testData.amount,
+            testData.expiration,
+            testData.owner,
+            testData.spender,
+            testData.amount,
+            tmpAdditionalData,
+            additionalDataTypeHash,
+            signedPermit
         );
 
         assert(permitC.isValidUnorderedNonce(alice, 0));

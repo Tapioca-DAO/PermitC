@@ -1,9 +1,8 @@
-pragma solidity ^0.8.24;
+pragma solidity ^0.8.22;
 
 import "../Base.t.sol";
 
 contract lockdownTest is BaseTest {
-
     function setUp() public override {
         super.setUp();
     }
@@ -11,7 +10,7 @@ contract lockdownTest is BaseTest {
     function testLockdown_base(address account) public {
         for (uint256 i = 0; i < 100; i++) {
             uint256 previousMasterNonce = permitC.masterNonce(account);
-            
+
             vm.startPrank(account);
             vm.expectEmit(true, false, false, false);
             emit Lockdown(account);

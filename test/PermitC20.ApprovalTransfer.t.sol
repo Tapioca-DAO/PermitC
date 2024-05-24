@@ -1,4 +1,4 @@
-pragma solidity ^0.8.24;
+pragma solidity ^0.8.22;
 
 import "./Base.t.sol";
 import "../src/DataTypes.sol";
@@ -29,7 +29,6 @@ contract PermitC20ApprovalTransferTest is BaseTest {
     }
 
     TestData private testData;
-
 
     modifier whenExpirationIsInTheFuture(uint48 expiration) {
         testData.expiration = uint48(bound(expiration, block.timestamp, type(uint48).max));
@@ -75,7 +74,6 @@ contract PermitC20ApprovalTransferTest is BaseTest {
         _;
     }
 
-    
     function setUp() public override {
         super.setUp();
 
@@ -90,9 +88,10 @@ contract PermitC20ApprovalTransferTest is BaseTest {
     }
 
     function testTransferFromWithApprovalOnChain_ERC20_base(uint48 expiration)
-     whenExpirationIsInTheFuture(expiration)
-     whenTokenIsERC20()
-     public {
+        public
+        whenExpirationIsInTheFuture(expiration)
+        whenTokenIsERC20
+    {
         _mint20(testData.token, testData.owner, 1);
 
         assertEq(ERC20(testData.token).balanceOf(testData.owner), 1);
@@ -101,7 +100,8 @@ contract PermitC20ApprovalTransferTest is BaseTest {
         ERC20(testData.token).approve(address(permitC), type(uint256).max);
         permitC.approve(TOKEN_TYPE_ERC20, testData.token, 0, testData.spender, 1, uint48(block.timestamp));
 
-        (uint256 allowanceAmount, uint256 allowanceExpiration) = permitC.allowance(testData.owner, testData.spender, TOKEN_TYPE_ERC20, testData.token, 0);
+        (uint256 allowanceAmount, uint256 allowanceExpiration) =
+            permitC.allowance(testData.owner, testData.spender, TOKEN_TYPE_ERC20, testData.token, 0);
         assertEq(allowanceAmount, 1);
         assertEq(allowanceExpiration, uint48(block.timestamp));
 
@@ -115,18 +115,22 @@ contract PermitC20ApprovalTransferTest is BaseTest {
     }
 
     function testTransferFromWithApprovalOnChain_ERC20_MaxApprovalCorrectAfterFailedTransfer(uint48 expiration)
-     whenExpirationIsInTheFuture(expiration)
-     whenTokenIsERC20()
-     public {
+        public
+        whenExpirationIsInTheFuture(expiration)
+        whenTokenIsERC20
+    {
         _mint20(testData.token, testData.owner, 1000);
 
         assertEq(ERC20(testData.token).balanceOf(testData.owner), 1000);
 
         changePrank(testData.owner);
         ERC20(testData.token).approve(address(permitC), type(uint256).max);
-        permitC.approve(TOKEN_TYPE_ERC20, testData.token, 0, testData.spender, type(uint200).max, uint48(block.timestamp));
+        permitC.approve(
+            TOKEN_TYPE_ERC20, testData.token, 0, testData.spender, type(uint200).max, uint48(block.timestamp)
+        );
 
-        (uint256 allowanceAmount, uint256 allowanceExpiration) = permitC.allowance(testData.owner, testData.spender, TOKEN_TYPE_ERC20, testData.token, 0);
+        (uint256 allowanceAmount, uint256 allowanceExpiration) =
+            permitC.allowance(testData.owner, testData.spender, TOKEN_TYPE_ERC20, testData.token, 0);
         assertEq(allowanceAmount, type(uint200).max);
         assertEq(allowanceExpiration, uint48(block.timestamp));
 
@@ -142,9 +146,10 @@ contract PermitC20ApprovalTransferTest is BaseTest {
     }
 
     function testTransferFromWithApprovalOnChain_ERC20_RevertsWhenPaused(uint48 expiration)
-     whenExpirationIsInTheFuture(expiration)
-     whenTokenIsERC20()
-     public {
+        public
+        whenExpirationIsInTheFuture(expiration)
+        whenTokenIsERC20
+    {
         _mint20(testData.token, testData.owner, 1);
 
         assertEq(ERC20(testData.token).balanceOf(testData.owner), 1);
@@ -153,7 +158,8 @@ contract PermitC20ApprovalTransferTest is BaseTest {
         ERC20(testData.token).approve(address(permitC), type(uint256).max);
         permitC.approve(TOKEN_TYPE_ERC20, testData.token, 0, testData.spender, 1, uint48(block.timestamp));
 
-        (uint256 allowanceAmount, uint256 allowanceExpiration) = permitC.allowance(testData.owner, testData.spender, TOKEN_TYPE_ERC20, testData.token, 0);
+        (uint256 allowanceAmount, uint256 allowanceExpiration) =
+            permitC.allowance(testData.owner, testData.spender, TOKEN_TYPE_ERC20, testData.token, 0);
         assertEq(allowanceAmount, 1);
         assertEq(allowanceExpiration, uint48(block.timestamp));
 
@@ -172,9 +178,10 @@ contract PermitC20ApprovalTransferTest is BaseTest {
     }
 
     function testTransferFromWithApprovalOnChain_ERC20_SuccessWhenNotPaused(uint48 expiration)
-     whenExpirationIsInTheFuture(expiration)
-     whenTokenIsERC20()
-     public {
+        public
+        whenExpirationIsInTheFuture(expiration)
+        whenTokenIsERC20
+    {
         _mint20(testData.token, testData.owner, 1);
 
         assertEq(ERC20(testData.token).balanceOf(testData.owner), 1);
@@ -183,7 +190,8 @@ contract PermitC20ApprovalTransferTest is BaseTest {
         ERC20(testData.token).approve(address(permitC), type(uint256).max);
         permitC.approve(TOKEN_TYPE_ERC20, testData.token, 0, testData.spender, 1, uint48(block.timestamp));
 
-        (uint256 allowanceAmount, uint256 allowanceExpiration) = permitC.allowance(testData.owner, testData.spender, TOKEN_TYPE_ERC20, testData.token, 0);
+        (uint256 allowanceAmount, uint256 allowanceExpiration) =
+            permitC.allowance(testData.owner, testData.spender, TOKEN_TYPE_ERC20, testData.token, 0);
         assertEq(allowanceAmount, 1);
         assertEq(allowanceExpiration, uint48(block.timestamp));
 
@@ -201,9 +209,10 @@ contract PermitC20ApprovalTransferTest is BaseTest {
     }
 
     function testTransferFromWithApprovalOnChain_ERC20_RevertsWhenPausedAllowedAfterUnpause(uint48 expiration)
-     whenExpirationIsInTheFuture(expiration)
-     whenTokenIsERC20()
-     public {
+        public
+        whenExpirationIsInTheFuture(expiration)
+        whenTokenIsERC20
+    {
         _mint20(testData.token, testData.owner, 1);
 
         assertEq(ERC20(testData.token).balanceOf(testData.owner), 1);
@@ -212,7 +221,8 @@ contract PermitC20ApprovalTransferTest is BaseTest {
         ERC20(testData.token).approve(address(permitC), type(uint256).max);
         permitC.approve(TOKEN_TYPE_ERC20, testData.token, 0, testData.spender, 1, uint48(block.timestamp));
 
-        (uint256 allowanceAmount, uint256 allowanceExpiration) = permitC.allowance(testData.owner, testData.spender, TOKEN_TYPE_ERC20, testData.token, 0);
+        (uint256 allowanceAmount, uint256 allowanceExpiration) =
+            permitC.allowance(testData.owner, testData.spender, TOKEN_TYPE_ERC20, testData.token, 0);
         assertEq(allowanceAmount, 1);
         assertEq(allowanceExpiration, uint48(block.timestamp));
 
@@ -244,9 +254,10 @@ contract PermitC20ApprovalTransferTest is BaseTest {
     }
 
     function testTransferFromWithApprovalOnChain_ERC20_AllowanceAmountRestoredAfterRevert(uint48 expiration)
-     whenExpirationIsInTheFuture(expiration)
-     whenTokenIsReverter()
-     public {
+        public
+        whenExpirationIsInTheFuture(expiration)
+        whenTokenIsReverter
+    {
         _mint20(testData.token, testData.owner, 1);
 
         assertEq(ERC20(testData.token).balanceOf(testData.owner), 1);
@@ -255,7 +266,8 @@ contract PermitC20ApprovalTransferTest is BaseTest {
         ERC20(testData.token).approve(address(permitC), type(uint256).max);
         permitC.approve(TOKEN_TYPE_ERC20, testData.token, 0, testData.spender, 1, uint48(block.timestamp));
 
-        (uint256 allowanceAmount, uint256 allowanceExpiration) = permitC.allowance(testData.owner, testData.spender, TOKEN_TYPE_ERC20, testData.token, 0);
+        (uint256 allowanceAmount, uint256 allowanceExpiration) =
+            permitC.allowance(testData.owner, testData.spender, TOKEN_TYPE_ERC20, testData.token, 0);
         assertEq(allowanceAmount, 1);
         assertEq(allowanceExpiration, uint48(block.timestamp));
 
@@ -270,5 +282,4 @@ contract PermitC20ApprovalTransferTest is BaseTest {
         assertEq(ERC20(testData.token).balanceOf(testData.owner), 1);
         assertEq(allowanceAmount, 1);
     }
-
 }

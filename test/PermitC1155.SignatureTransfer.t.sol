@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.24;
+pragma solidity ^0.8.22;
 
 import "forge-std/Test.sol";
 import "../src/PermitC.sol";
@@ -10,7 +10,6 @@ import "./mocks/ERC1155Mock.sol";
 import "./mocks/ERC1155Reverter.sol";
 
 contract PermitC1155Test is Test {
-
     enum OrderProtocols {
         ERC721_FILL_OR_KILL,
         ERC1155_FILL_OR_KILL,
@@ -23,7 +22,7 @@ contract PermitC1155Test is Test {
         // Amount of tokens to transfer
         uint256 requestedAmount;
     }
-    
+
     struct PermitSignatureDetails {
         // Collection Address
         address token;
@@ -67,8 +66,8 @@ contract PermitC1155Test is Test {
     address bob;
     address carol;
 
-
-    string constant additionalDataTypeString = "SaleApproval approval)SaleApproval(uint8 protocol,address seller,address marketplace,address paymentMethod,address tokenAddress,uint256 tokenId,uint256 amount,uint256 itemPrice,uint256 expiration,uint256 marketplaceFeeNumerator,uint256 maxRoyaltyFeeNumerator,uint256 nonce,uint256 masterNonce)";
+    string constant additionalDataTypeString =
+        "SaleApproval approval)SaleApproval(uint8 protocol,address seller,address marketplace,address paymentMethod,address tokenAddress,uint256 tokenId,uint256 amount,uint256 itemPrice,uint256 expiration,uint256 marketplaceFeeNumerator,uint256 maxRoyaltyFeeNumerator,uint256 nonce,uint256 masterNonce)";
 
     SaleApproval approval;
 
@@ -121,7 +120,9 @@ contract PermitC1155Test is Test {
         bytes memory signedPermit = abi.encodePacked(r, s, v);
 
         vm.startPrank(bob);
-        permitC.permitTransferFromERC1155(permit.token, permit.id, permit.nonce, permit.amount, permit.expiration, alice, bob, 1, signedPermit);
+        permitC.permitTransferFromERC1155(
+            permit.token, permit.id, permit.nonce, permit.amount, permit.expiration, alice, bob, 1, signedPermit
+        );
         vm.stopPrank();
 
         assertEq(ERC1155(token).balanceOf(bob, 1), 1);
@@ -167,7 +168,9 @@ contract PermitC1155Test is Test {
         bytes memory signedPermit = abi.encodePacked(r, s, v);
 
         vm.startPrank(bob);
-        permitC.permitTransferFromERC1155(permit.token, permit.id, permit.nonce, permit.amount, permit.expiration, alice, bob, 2, signedPermit);
+        permitC.permitTransferFromERC1155(
+            permit.token, permit.id, permit.nonce, permit.amount, permit.expiration, alice, bob, 2, signedPermit
+        );
         vm.stopPrank();
 
         assertEq(ERC1155(token).balanceOf(bob, 1), 2);
@@ -214,7 +217,9 @@ contract PermitC1155Test is Test {
 
         vm.startPrank(bob);
         vm.expectRevert(PermitC__SignatureTransferExceededPermittedAmount.selector);
-        permitC.permitTransferFromERC1155(permit.token, permit.id, permit.nonce, permit.amount, permit.expiration, alice, bob, 2, signedPermit);
+        permitC.permitTransferFromERC1155(
+            permit.token, permit.id, permit.nonce, permit.amount, permit.expiration, alice, bob, 2, signedPermit
+        );
         vm.stopPrank();
 
         assertEq(ERC1155(token).balanceOf(bob, 1), 0);
@@ -231,8 +236,14 @@ contract PermitC1155Test is Test {
         vm.prank(alice);
         ERC1155(token).setApprovalForAll(address(permitC), true);
 
-        PermitSignatureDetails memory permit =
-            PermitSignatureDetails({token: token, id: 1, amount: 1, nonce: 0, operator: bob, expiration: uint48(block.timestamp)});
+        PermitSignatureDetails memory permit = PermitSignatureDetails({
+            token: token,
+            id: 1,
+            amount: 1,
+            nonce: 0,
+            operator: bob,
+            expiration: uint48(block.timestamp)
+        });
 
         vm.warp(uint48(block.timestamp + 1000));
 
@@ -257,7 +268,9 @@ contract PermitC1155Test is Test {
 
         vm.startPrank(bob);
         vm.expectRevert(PermitC__SignatureTransferExceededPermitExpired.selector);
-        permitC.permitTransferFromERC1155(permit.token, permit.id, permit.nonce, permit.amount, permit.expiration, alice, bob, 1, signedPermit);
+        permitC.permitTransferFromERC1155(
+            permit.token, permit.id, permit.nonce, permit.amount, permit.expiration, alice, bob, 1, signedPermit
+        );
         vm.stopPrank();
 
         assertEq(ERC1155(token).balanceOf(bob, 1), 0);
@@ -304,7 +317,9 @@ contract PermitC1155Test is Test {
 
         vm.startPrank(bob);
         vm.expectRevert(PermitC__SignatureTransferInvalidSignature.selector);
-        permitC.permitTransferFromERC1155(permit.token, permit.id, permit.nonce, permit.amount, permit.expiration, alice, bob, 1, signedPermit);
+        permitC.permitTransferFromERC1155(
+            permit.token, permit.id, permit.nonce, permit.amount, permit.expiration, alice, bob, 1, signedPermit
+        );
         vm.stopPrank();
 
         assertEq(ERC1155(token).balanceOf(bob, 1), 0);
@@ -351,7 +366,9 @@ contract PermitC1155Test is Test {
         bytes memory signedPermit = abi.encodePacked(r, s, v);
 
         vm.startPrank(bob);
-        permitC.permitTransferFromERC1155(permit.token, permit.id, permit.nonce, permit.amount, permit.expiration, alice, bob, 1, signedPermit);
+        permitC.permitTransferFromERC1155(
+            permit.token, permit.id, permit.nonce, permit.amount, permit.expiration, alice, bob, 1, signedPermit
+        );
         vm.stopPrank();
 
         assertEq(ERC1155(token).balanceOf(bob, 1), 1);
@@ -365,7 +382,9 @@ contract PermitC1155Test is Test {
 
         vm.startPrank(bob);
         vm.expectRevert(PermitC__NonceAlreadyUsedOrRevoked.selector);
-        permitC.permitTransferFromERC1155(permit.token, permit.id, permit.nonce, permit.amount, permit.expiration, alice, bob, 1, signedPermit);
+        permitC.permitTransferFromERC1155(
+            permit.token, permit.id, permit.nonce, permit.amount, permit.expiration, alice, bob, 1, signedPermit
+        );
         vm.stopPrank();
     }
 
@@ -413,7 +432,9 @@ contract PermitC1155Test is Test {
 
         vm.startPrank(bob);
         vm.expectRevert(PermitC__NonceAlreadyUsedOrRevoked.selector);
-        permitC.permitTransferFromERC1155(permit.token, permit.id, permit.nonce, permit.amount, permit.expiration, alice, bob, 1, signedPermit);
+        permitC.permitTransferFromERC1155(
+            permit.token, permit.id, permit.nonce, permit.amount, permit.expiration, alice, bob, 1, signedPermit
+        );
         vm.stopPrank();
 
         assertEq(ERC1155(token).balanceOf(alice, 1), 1);
@@ -459,7 +480,9 @@ contract PermitC1155Test is Test {
         bytes memory signedPermit = abi.encodePacked(r, s, v);
 
         vm.startPrank(bob);
-        bool isError = permitC.permitTransferFromERC1155(permit.token, permit.id, permit.nonce, permit.amount, permit.expiration, alice, bob, 1, signedPermit);
+        bool isError = permitC.permitTransferFromERC1155(
+            permit.token, permit.id, permit.nonce, permit.amount, permit.expiration, alice, bob, 1, signedPermit
+        );
         vm.stopPrank();
 
         assert(isError);
@@ -477,21 +500,21 @@ contract PermitC1155Test is Test {
         vm.prank(alice);
         ERC1155(token).setApprovalForAll(address(permitC), true);
         approval.tokenAddress = token;
-        
+
         bytes32 additionalData = keccak256(
             abi.encode(
-                uint8(0), 
-                approval.seller, 
-                approval.marketplace, 
-                approval.paymentMethod, 
-                approval.tokenAddress, 
-                approval.tokenId, 
-                approval.amount, 
+                uint8(0),
+                approval.seller,
+                approval.marketplace,
+                approval.paymentMethod,
+                approval.tokenAddress,
+                approval.tokenId,
+                approval.amount,
                 approval.itemPrice,
-                approval.expiration, 
-                approval.marketplaceFeeNumerator, 
-                approval.maxRoyaltyFeeNumerator, 
-                approval.nonce, 
+                approval.expiration,
+                approval.marketplaceFeeNumerator,
+                approval.maxRoyaltyFeeNumerator,
+                approval.nonce,
                 approval.masterNonce
             )
         );
@@ -504,15 +527,9 @@ contract PermitC1155Test is Test {
             operator: bob,
             expiration: uint48(block.timestamp + 1000)
         });
-        bytes32 typeHash = keccak256(
-            bytes(
-                string.concat(
-                    SINGLE_USE_PERMIT_TRANSFER_ADVANCED_TYPEHASH_STUB,
-                    additionalDataTypeString
-                )
-            )
-        );
-        
+        bytes32 typeHash =
+            keccak256(bytes(string.concat(SINGLE_USE_PERMIT_TRANSFER_ADVANCED_TYPEHASH_STUB, additionalDataTypeString)));
+
         bytes32 digest = ECDSA.toTypedDataHash(
             permitC.domainSeparatorV4(),
             keccak256(
@@ -536,14 +553,24 @@ contract PermitC1155Test is Test {
             signedPermit = abi.encodePacked(r, s, v);
         }
         bytes32 tmpAdditionalData = additionalData;
-        bytes32 additionalDataTypeHash = keccak256(bytes(string.concat(SINGLE_USE_PERMIT_TRANSFER_ADVANCED_TYPEHASH_STUB, additionalDataTypeString)));
+        bytes32 additionalDataTypeHash =
+            keccak256(bytes(string.concat(SINGLE_USE_PERMIT_TRANSFER_ADVANCED_TYPEHASH_STUB, additionalDataTypeString)));
 
         permitC.registerAdditionalDataHash(additionalDataTypeString);
 
         vm.prank(bob);
         (bool isError) = permitC.permitTransferFromWithAdditionalDataERC1155(
-            permit.token, permit.id, permit.nonce, permit.amount, permit.expiration, 
-            alice, bob, permit.amount, tmpAdditionalData, additionalDataTypeHash, signedPermit
+            permit.token,
+            permit.id,
+            permit.nonce,
+            permit.amount,
+            permit.expiration,
+            alice,
+            bob,
+            permit.amount,
+            tmpAdditionalData,
+            additionalDataTypeHash,
+            signedPermit
         );
 
         assert(permitC.isValidUnorderedNonce(alice, permit.nonce));

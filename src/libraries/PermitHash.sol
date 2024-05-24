@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.24;
+pragma solidity ^0.8.22;
 
 import {SINGLE_USE_PERMIT_TYPEHASH, UPDATE_APPROVAL_TYPEHASH} from "../Constants.sol";
 
 library PermitHash {
-
     /**
      * @notice  Hashes the permit data for a stored approval
-     * 
+     *
      * @param tokenType           The type of token
      * @param token               The address of the token
      * @param id                  The id of the token
@@ -17,7 +16,7 @@ library PermitHash {
      * @param approvalExpiration  The time the permit approval expires
      * @param sigDeadline         The deadline for submitting the permit onchain
      * @param masterNonce         The signers master nonce
-     * 
+     *
      * @return hash  The hash of the permit data
      */
     function hashOnChainApproval(
@@ -26,7 +25,7 @@ library PermitHash {
         uint256 id,
         uint256 amount,
         uint256 nonce,
-        address operator, 
+        address operator,
         uint256 approvalExpiration,
         uint256 sigDeadline,
         uint256 masterNonce
@@ -49,7 +48,7 @@ library PermitHash {
 
     /**
      * @notice  Hashes the permit data with the single user permit without additional data typehash
-     * 
+     *
      * @param tokenType               The type of token
      * @param token                   The address of the token
      * @param id                      The id of the token
@@ -57,7 +56,7 @@ library PermitHash {
      * @param nonce                   The nonce for the permit
      * @param expiration              The time the permit expires
      * @param masterNonce             The signers master nonce
-     * 
+     *
      * @return hash  The hash of the permit data
      */
     function hashSingleUsePermit(
@@ -71,22 +70,14 @@ library PermitHash {
     ) internal view returns (bytes32 hash) {
         hash = keccak256(
             abi.encode(
-                SINGLE_USE_PERMIT_TYPEHASH,
-                tokenType,
-                token,
-                id,
-                amount,
-                nonce,
-                msg.sender,
-                expiration,
-                masterNonce
+                SINGLE_USE_PERMIT_TYPEHASH, tokenType, token, id, amount, nonce, msg.sender, expiration, masterNonce
             )
         );
     }
 
     /**
      * @notice  Hashes the permit data with the supplied typehash
-     * 
+     *
      * @param tokenType               The type of token
      * @param token                   The address of the token
      * @param id                      The id of the token
@@ -96,7 +87,7 @@ library PermitHash {
      * @param additionalData          The additional data to validate with the permit signature
      * @param additionalDataTypeHash  The typehash of the permit to use for validating the signature
      * @param masterNonce             The signers master nonce
-     * 
+     *
      * @return hash  The hash of the permit data with the supplied typehash
      */
     function hashSingleUsePermitWithAdditionalData(

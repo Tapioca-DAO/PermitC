@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.24;
+pragma solidity ^0.8.22;
 
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 
@@ -11,13 +11,10 @@ contract ERC1155Reverter is ERC1155 {
         _mint(to, tokenId, amount, "");
     }
 
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 tokenId,
-        uint256 amount,
-        bytes memory data
-    ) public override {
+    function safeTransferFrom(address from, address to, uint256 tokenId, uint256 amount, bytes memory data)
+        public
+        override
+    {
         revert();
     }
 }

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.24;
+pragma solidity ^0.8.22;
 
 import "forge-std/Test.sol";
 import "../src/PermitC.sol";
@@ -11,7 +11,6 @@ import "./mocks/ERC721Mock.sol";
 import "./mocks/ERC721Reverter.sol";
 
 contract PermitC721Test is Test {
-
     enum OrderProtocols {
         ERC721_FILL_OR_KILL,
         ERC1155_FILL_OR_KILL,
@@ -34,7 +33,7 @@ contract PermitC721Test is Test {
         // Amount of tokens to transfer
         uint256 requestedAmount;
     }
-    
+
     struct PermitSignatureDetails {
         // Collection Address
         address token;
@@ -78,7 +77,8 @@ contract PermitC721Test is Test {
     address immutable bob;
     address immutable carol;
 
-    string constant additionalDataTypeString = "SaleApproval approval)SaleApproval(uint8 protocol,address seller,address marketplace,address paymentMethod,address tokenAddress,uint256 tokenId,uint256 amount,uint256 itemPrice,uint256 expiration,uint256 marketplaceFeeNumerator,uint256 maxRoyaltyFeeNumerator,uint256 nonce,uint256 masterNonce)";
+    string constant additionalDataTypeString =
+        "SaleApproval approval)SaleApproval(uint8 protocol,address seller,address marketplace,address paymentMethod,address tokenAddress,uint256 tokenId,uint256 amount,uint256 itemPrice,uint256 expiration,uint256 marketplaceFeeNumerator,uint256 maxRoyaltyFeeNumerator,uint256 nonce,uint256 masterNonce)";
 
     SaleApproval approval;
 
@@ -88,20 +88,20 @@ contract PermitC721Test is Test {
         carol = vm.addr(carolKey);
 
         approval = SaleApproval({
-        protocol: OrderProtocols.ERC721_FILL_OR_KILL,
-        seller: alice,
-        marketplace: address(0),
-        paymentMethod: address(0),
-        tokenAddress: address(0),
-        tokenId: 1,
-        amount: 1,
-        itemPrice: 0,
-        expiration: uint48(block.timestamp + 1000),
-        marketplaceFeeNumerator: 0,
-        maxRoyaltyFeeNumerator: 0,
-        nonce: 0,
-        masterNonce: 0
-    });
+            protocol: OrderProtocols.ERC721_FILL_OR_KILL,
+            seller: alice,
+            marketplace: address(0),
+            paymentMethod: address(0),
+            tokenAddress: address(0),
+            tokenId: 1,
+            amount: 1,
+            itemPrice: 0,
+            expiration: uint48(block.timestamp + 1000),
+            marketplaceFeeNumerator: 0,
+            maxRoyaltyFeeNumerator: 0,
+            nonce: 0,
+            masterNonce: 0
+        });
     }
 
     function setUp() public {
@@ -150,7 +150,9 @@ contract PermitC721Test is Test {
         bytes memory signedPermit = abi.encodePacked(r, s, v);
 
         vm.startPrank(bob);
-        permitC.permitTransferFromERC721(permit.token, permit.id, permit.nonce, permit.expiration, alice, bob, signedPermit);
+        permitC.permitTransferFromERC721(
+            permit.token, permit.id, permit.nonce, permit.expiration, alice, bob, signedPermit
+        );
         vm.stopPrank();
 
         assertEq(ERC721(token).ownerOf(1), bob);
@@ -199,7 +201,9 @@ contract PermitC721Test is Test {
         bytes memory signedPermit = abi.encodePacked(r, s, v);
 
         vm.startPrank(bob);
-        permitC.permitTransferFromERC721(permit.token, permit.id, permit.nonce, permit.expiration, alice, bob, signedPermit);
+        permitC.permitTransferFromERC721(
+            permit.token, permit.id, permit.nonce, permit.expiration, alice, bob, signedPermit
+        );
         vm.stopPrank();
 
         assertEq(ERC721(token).ownerOf(1), bob);
@@ -234,11 +238,15 @@ contract PermitC721Test is Test {
             )
         );
         bytes memory signedPermit2;
-        {(uint8 v2, bytes32 r2, bytes32 s2) = vm.sign(aliceKey, digest2);
-        signedPermit2 = abi.encodePacked(r2, s2, v2);}
+        {
+            (uint8 v2, bytes32 r2, bytes32 s2) = vm.sign(aliceKey, digest2);
+            signedPermit2 = abi.encodePacked(r2, s2, v2);
+        }
 
         vm.startPrank(bob);
-        permitC.permitTransferFromERC721(permit2.token, permit2.id, permit2.nonce, permit2.expiration, alice, bob, signedPermit2);
+        permitC.permitTransferFromERC721(
+            permit2.token, permit2.id, permit2.nonce, permit2.expiration, alice, bob, signedPermit2
+        );
         vm.stopPrank();
 
         assertEq(ERC721(token).ownerOf(1), bob);
@@ -257,8 +265,14 @@ contract PermitC721Test is Test {
         vm.prank(alice);
         ERC721(token).approve(address(permitC), 1);
 
-        PermitSignatureDetails memory permit =
-            PermitSignatureDetails({token: token, id: 1, amount: 1, nonce: 0, operator: bob, expiration: uint48(block.timestamp)});
+        PermitSignatureDetails memory permit = PermitSignatureDetails({
+            token: token,
+            id: 1,
+            amount: 1,
+            nonce: 0,
+            operator: bob,
+            expiration: uint48(block.timestamp)
+        });
 
         vm.warp(uint48(block.timestamp + 1000));
 
@@ -284,7 +298,9 @@ contract PermitC721Test is Test {
 
         vm.prank(bob);
         vm.expectRevert(PermitC__SignatureTransferExceededPermitExpired.selector);
-        permitC.permitTransferFromERC721(permit.token, permit.id, permit.nonce, permit.expiration, alice, bob, signedPermit);
+        permitC.permitTransferFromERC721(
+            permit.token, permit.id, permit.nonce, permit.expiration, alice, bob, signedPermit
+        );
 
         assertEq(ERC721(token).ownerOf(1), alice);
     }
@@ -329,7 +345,9 @@ contract PermitC721Test is Test {
         bytes memory signedPermit = abi.encodePacked(r, s, v);
 
         vm.prank(bob);
-        permitC.permitTransferFromERC721(permit.token, permit.id, permit.nonce, permit.expiration, alice, bob, signedPermit);
+        permitC.permitTransferFromERC721(
+            permit.token, permit.id, permit.nonce, permit.expiration, alice, bob, signedPermit
+        );
 
         assertEq(ERC721(token).ownerOf(1), bob);
 
@@ -338,7 +356,9 @@ contract PermitC721Test is Test {
 
         vm.prank(bob);
         vm.expectRevert(PermitC__NonceAlreadyUsedOrRevoked.selector);
-        permitC.permitTransferFromERC721(permit.token, permit.id, permit.nonce, permit.expiration, alice, bob, signedPermit);
+        permitC.permitTransferFromERC721(
+            permit.token, permit.id, permit.nonce, permit.expiration, alice, bob, signedPermit
+        );
 
         assertEq(ERC721(token).ownerOf(1), alice);
     }
@@ -387,7 +407,9 @@ contract PermitC721Test is Test {
 
         vm.prank(bob);
         vm.expectRevert(PermitC__NonceAlreadyUsedOrRevoked.selector);
-        permitC.permitTransferFromERC721(permit.token, permit.id, permit.nonce, permit.expiration, alice, bob, signedPermit);
+        permitC.permitTransferFromERC721(
+            permit.token, permit.id, permit.nonce, permit.expiration, alice, bob, signedPermit
+        );
 
         assertEq(ERC721(token).ownerOf(1), alice);
     }
@@ -432,7 +454,9 @@ contract PermitC721Test is Test {
 
         vm.prank(bob);
         vm.expectRevert(PermitC__SignatureTransferInvalidSignature.selector);
-        permitC.permitTransferFromERC721(permit.token, permit.id, permit.nonce, permit.expiration, alice, bob, signedPermit);
+        permitC.permitTransferFromERC721(
+            permit.token, permit.id, permit.nonce, permit.expiration, alice, bob, signedPermit
+        );
 
         assertEq(ERC721(token).ownerOf(1), alice);
     }
@@ -477,7 +501,9 @@ contract PermitC721Test is Test {
         bytes memory signedPermit = abi.encodePacked(r, s, v);
 
         vm.startPrank(bob);
-        bool isError = permitC.permitTransferFromERC1155(permit.token, permit.id, permit.nonce, permit.amount, permit.expiration, alice, bob, 1, signedPermit);
+        bool isError = permitC.permitTransferFromERC1155(
+            permit.token, permit.id, permit.nonce, permit.amount, permit.expiration, alice, bob, 1, signedPermit
+        );
         vm.stopPrank();
 
         assert(isError);
@@ -494,21 +520,21 @@ contract PermitC721Test is Test {
         vm.prank(alice);
         ERC721(token).approve(address(permitC), 1);
         approval.tokenAddress = token;
-        
+
         bytes32 additionalData = keccak256(
             abi.encode(
-                uint8(0), 
-                approval.seller, 
-                approval.marketplace, 
-                approval.paymentMethod, 
-                approval.tokenAddress, 
-                approval.tokenId, 
-                approval.amount, 
+                uint8(0),
+                approval.seller,
+                approval.marketplace,
+                approval.paymentMethod,
+                approval.tokenAddress,
+                approval.tokenId,
+                approval.amount,
                 approval.itemPrice,
-                approval.expiration, 
-                approval.marketplaceFeeNumerator, 
-                approval.maxRoyaltyFeeNumerator, 
-                approval.nonce, 
+                approval.expiration,
+                approval.marketplaceFeeNumerator,
+                approval.maxRoyaltyFeeNumerator,
+                approval.nonce,
                 approval.masterNonce
             )
         );
@@ -521,15 +547,9 @@ contract PermitC721Test is Test {
             operator: bob,
             expiration: uint48(block.timestamp + 1000)
         });
-        bytes32 typeHash = keccak256(
-            bytes(
-                string.concat(
-                    SINGLE_USE_PERMIT_TRANSFER_ADVANCED_TYPEHASH_STUB,
-                    additionalDataTypeString
-                )
-            )
-        );
-        
+        bytes32 typeHash =
+            keccak256(bytes(string.concat(SINGLE_USE_PERMIT_TRANSFER_ADVANCED_TYPEHASH_STUB, additionalDataTypeString)));
+
         bytes32 digest = ECDSA.toTypedDataHash(
             permitC.domainSeparatorV4(),
             keccak256(
@@ -548,7 +568,6 @@ contract PermitC721Test is Test {
             )
         );
 
-
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(aliceKey, digest);
         bytes memory signedPermit = abi.encodePacked(r, s, v);
         bytes32 tmpAdditionalData = additionalData;
@@ -557,8 +576,15 @@ contract PermitC721Test is Test {
         vm.prank(bob);
         vm.expectRevert(PermitC__SignatureTransferPermitHashNotRegistered.selector);
         permitC.permitTransferFromWithAdditionalDataERC721(
-            permit.token, permit.id, permit.nonce, permit.expiration, 
-            alice, bob,  tmpAdditionalData, additionalDataTypeHash, signedPermit
+            permit.token,
+            permit.id,
+            permit.nonce,
+            permit.expiration,
+            alice,
+            bob,
+            tmpAdditionalData,
+            additionalDataTypeHash,
+            signedPermit
         );
     }
 
@@ -572,21 +598,21 @@ contract PermitC721Test is Test {
         vm.prank(alice);
         ERC721(token).approve(address(permitC), 1);
         approval.tokenAddress = token;
-        
+
         bytes32 additionalData = keccak256(
             abi.encode(
-                uint8(0), 
-                approval.seller, 
-                approval.marketplace, 
-                approval.paymentMethod, 
-                approval.tokenAddress, 
-                approval.tokenId, 
-                approval.amount, 
+                uint8(0),
+                approval.seller,
+                approval.marketplace,
+                approval.paymentMethod,
+                approval.tokenAddress,
+                approval.tokenId,
+                approval.amount,
                 approval.itemPrice,
-                approval.expiration, 
-                approval.marketplaceFeeNumerator, 
-                approval.maxRoyaltyFeeNumerator, 
-                approval.nonce, 
+                approval.expiration,
+                approval.marketplaceFeeNumerator,
+                approval.maxRoyaltyFeeNumerator,
+                approval.nonce,
                 approval.masterNonce
             )
         );
@@ -599,15 +625,9 @@ contract PermitC721Test is Test {
             operator: bob,
             expiration: uint48(block.timestamp + 1000)
         });
-        bytes32 typeHash = keccak256(
-            bytes(
-                string.concat(
-                    SINGLE_USE_PERMIT_TRANSFER_ADVANCED_TYPEHASH_STUB,
-                    additionalDataTypeString
-                )
-            )
-        );
-        
+        bytes32 typeHash =
+            keccak256(bytes(string.concat(SINGLE_USE_PERMIT_TRANSFER_ADVANCED_TYPEHASH_STUB, additionalDataTypeString)));
+
         bytes32 digest = ECDSA.toTypedDataHash(
             permitC.domainSeparatorV4(),
             keccak256(
@@ -626,20 +646,26 @@ contract PermitC721Test is Test {
             )
         );
 
-
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(aliceKey, digest);
         bytes memory signedPermit = abi.encodePacked(r, s, v);
         bytes32 tmpAdditionalData = additionalData;
-        bytes32 additionalDataTypeHash = keccak256(bytes(string.concat(SINGLE_USE_PERMIT_TRANSFER_ADVANCED_TYPEHASH_STUB, additionalDataTypeString)));
+        bytes32 additionalDataTypeHash =
+            keccak256(bytes(string.concat(SINGLE_USE_PERMIT_TRANSFER_ADVANCED_TYPEHASH_STUB, additionalDataTypeString)));
 
         permitC.registerAdditionalDataHash(additionalDataTypeString);
 
         vm.prank(bob);
         (bool isError) = permitC.permitTransferFromWithAdditionalDataERC721(
-            permit.token, permit.id, permit.nonce, permit.expiration, 
-            alice, bob, tmpAdditionalData, additionalDataTypeHash, signedPermit
+            permit.token,
+            permit.id,
+            permit.nonce,
+            permit.expiration,
+            alice,
+            bob,
+            tmpAdditionalData,
+            additionalDataTypeHash,
+            signedPermit
         );
-
 
         assertEq(ERC721(token).ownerOf(1), bob);
         assertFalse(isError);
@@ -688,7 +714,9 @@ contract PermitC721Test is Test {
         assert(permitC.isValidUnorderedNonce(alice, 0));
 
         vm.startPrank(bob);
-        permitC.permitTransferFromERC721(permit.token, permit.id, permit.nonce, permit.expiration, alice, bob, signedPermit);
+        permitC.permitTransferFromERC721(
+            permit.token, permit.id, permit.nonce, permit.expiration, alice, bob, signedPermit
+        );
         vm.stopPrank();
 
         assert(permitC.isValidUnorderedNonce(alice, 0));
@@ -706,21 +734,21 @@ contract PermitC721Test is Test {
         vm.prank(alice);
         ERC721(token).approve(address(permitC), 1);
         approval.tokenAddress = token;
-        
+
         bytes32 additionalData = keccak256(
             abi.encode(
-                uint8(0), 
-                approval.seller, 
-                approval.marketplace, 
-                approval.paymentMethod, 
-                approval.tokenAddress, 
-                approval.tokenId, 
-                approval.amount, 
+                uint8(0),
+                approval.seller,
+                approval.marketplace,
+                approval.paymentMethod,
+                approval.tokenAddress,
+                approval.tokenId,
+                approval.amount,
                 approval.itemPrice,
-                approval.expiration, 
-                approval.marketplaceFeeNumerator, 
-                approval.maxRoyaltyFeeNumerator, 
-                approval.nonce, 
+                approval.expiration,
+                approval.marketplaceFeeNumerator,
+                approval.maxRoyaltyFeeNumerator,
+                approval.nonce,
                 approval.masterNonce
             )
         );
@@ -733,15 +761,9 @@ contract PermitC721Test is Test {
             operator: bob,
             expiration: uint48(block.timestamp + 1000)
         });
-        bytes32 typeHash = keccak256(
-            bytes(
-                string.concat(
-                    SINGLE_USE_PERMIT_TRANSFER_ADVANCED_TYPEHASH_STUB,
-                    additionalDataTypeString
-                )
-            )
-        );
-        
+        bytes32 typeHash =
+            keccak256(bytes(string.concat(SINGLE_USE_PERMIT_TRANSFER_ADVANCED_TYPEHASH_STUB, additionalDataTypeString)));
+
         bytes32 digest = ECDSA.toTypedDataHash(
             permitC.domainSeparatorV4(),
             keccak256(
@@ -760,18 +782,25 @@ contract PermitC721Test is Test {
             )
         );
 
-
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(aliceKey, digest);
         bytes memory signedPermit = abi.encodePacked(r, s, v);
         bytes32 tmpAdditionalData = additionalData;
-        bytes32 additionalDataTypeHash = keccak256(bytes(string.concat(SINGLE_USE_PERMIT_TRANSFER_ADVANCED_TYPEHASH_STUB, additionalDataTypeString)));
+        bytes32 additionalDataTypeHash =
+            keccak256(bytes(string.concat(SINGLE_USE_PERMIT_TRANSFER_ADVANCED_TYPEHASH_STUB, additionalDataTypeString)));
 
         permitC.registerAdditionalDataHash(additionalDataTypeString);
 
         vm.prank(bob);
         (bool isError) = permitC.permitTransferFromWithAdditionalDataERC721(
-            permit.token, permit.id, permit.nonce, permit.expiration, 
-            alice, bob, tmpAdditionalData, additionalDataTypeHash, signedPermit
+            permit.token,
+            permit.id,
+            permit.nonce,
+            permit.expiration,
+            alice,
+            bob,
+            tmpAdditionalData,
+            additionalDataTypeHash,
+            signedPermit
         );
 
         assert(permitC.isValidUnorderedNonce(alice, 0));

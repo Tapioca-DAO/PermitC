@@ -1,5 +1,4 @@
-pragma solidity ^0.8.24;
-
+pragma solidity ^0.8.22;
 
 /**
  * @title Immutable Create2 Contract Factory
@@ -17,12 +16,20 @@ pragma solidity ^0.8.24;
  * caution and please share any exploits or optimizations you discover.
  */
 interface IImmutableCreate2Factory {
+    function safeCreate2(bytes32 salt, bytes calldata initializationCode)
+        external
+        payable
+        returns (address deploymentAddress);
 
-  function safeCreate2(bytes32 salt, bytes calldata initializationCode) external payable returns (address deploymentAddress);
+    function findCreate2Address(bytes32 salt, bytes calldata initCode)
+        external
+        view
+        returns (address deploymentAddress);
 
-  function findCreate2Address(bytes32 salt, bytes calldata initCode) external view returns (address deploymentAddress);
+    function findCreate2AddressViaHash(bytes32 salt, bytes32 initCodeHash)
+        external
+        view
+        returns (address deploymentAddress);
 
-  function findCreate2AddressViaHash(bytes32 salt, bytes32 initCodeHash) external view returns (address deploymentAddress);
-
-  function hasBeenDeployed(address deploymentAddress) external view returns (bool);
+    function hasBeenDeployed(address deploymentAddress) external view returns (bool);
 }

@@ -1,4 +1,4 @@
-pragma solidity ^0.8.24;
+pragma solidity ^0.8.22;
 
 import "./Base.t.sol";
 import "../src/DataTypes.sol";
@@ -8,11 +8,7 @@ import "./mocks/ERC1155Reverter.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 contract PermitC1155OrderApprovalTransferTest is BaseTest {
-    event OrderRestored(
-        bytes32 indexed orderId,
-        address indexed owner,
-        uint256 amountRestoredToOrder
-    );
+    event OrderRestored(bytes32 indexed orderId, address indexed owner, uint256 amountRestoredToOrder);
 
     struct TestData {
         address token;
@@ -40,8 +36,9 @@ contract PermitC1155OrderApprovalTransferTest is BaseTest {
     TestData private testData;
 
     string constant FILL_PERMITTED_ORDER_STRING = "bytes32 orderDigest)";
-    bytes32 FILL_PERMITTED_ORDER_TYPEHASH = keccak256(bytes(string.concat(PERMIT_ORDER_ADVANCED_TYPEHASH_STUB, FILL_PERMITTED_ORDER_STRING)));
-    
+    bytes32 FILL_PERMITTED_ORDER_TYPEHASH =
+        keccak256(bytes(string.concat(PERMIT_ORDER_ADVANCED_TYPEHASH_STUB, FILL_PERMITTED_ORDER_STRING)));
+
     function setUp() public override {
         super.setUp();
 
@@ -112,30 +109,41 @@ contract PermitC1155OrderApprovalTransferTest is BaseTest {
     }
 
     function testFillOrder_ERC1155_base(uint48 expiration_, bytes32 orderId_)
-     public
-     whenExpirationIsInTheFuture(expiration_)
-     whenTokenIsERC1155()
-     whenOrderIdIsNotZero(orderId_) {
-        (address token, address owner, address spender, uint256 tokenId, uint208 amount, uint48 expiration, bytes32 orderId, uint256 nonce) = _cacheData();
+        public
+        whenExpirationIsInTheFuture(expiration_)
+        whenTokenIsERC1155
+        whenOrderIdIsNotZero(orderId_)
+    {
+        (
+            address token,
+            address owner,
+            address spender,
+            uint256 tokenId,
+            uint208 amount,
+            uint48 expiration,
+            bytes32 orderId,
+            uint256 nonce
+        ) = _cacheData();
         _mint1155(token, owner, 1, 1);
 
         changePrank(owner);
         ERC1155(token).setApprovalForAll(address(permitC), true);
 
-
         permitC.registerAdditionalDataHash(FILL_PERMITTED_ORDER_STRING);
 
-        bytes memory signedPermit = getSignature(SignatureDetails({
-            operator: spender, 
-            token: token, 
-            tokenId: tokenId, 
-            orderId: orderId, 
-            amount: amount, 
-            nonce: nonce, 
-            approvalExpiration: expiration,
-            sigDeadline: expiration,
-            tokenOwnerKey: aliceKey
-        }));
+        bytes memory signedPermit = getSignature(
+            SignatureDetails({
+                operator: spender,
+                token: token,
+                tokenId: tokenId,
+                orderId: orderId,
+                amount: amount,
+                nonce: nonce,
+                approvalExpiration: expiration,
+                sigDeadline: expiration,
+                tokenOwnerKey: aliceKey
+            })
+        );
 
         OrderFillAmounts memory orderFillAmounts = OrderFillAmounts({
             orderStartAmount: uint200(amount),
@@ -145,40 +153,59 @@ contract PermitC1155OrderApprovalTransferTest is BaseTest {
 
         changePrank(spender);
         (, bool isError) = permitC.fillPermittedOrderERC1155(
-            signedPermit, orderFillAmounts, token, tokenId, owner, spender, nonce, expiration, 
-            orderId, FILL_PERMITTED_ORDER_TYPEHASH
+            signedPermit,
+            orderFillAmounts,
+            token,
+            tokenId,
+            owner,
+            spender,
+            nonce,
+            expiration,
+            orderId,
+            FILL_PERMITTED_ORDER_TYPEHASH
         );
-  
+
         assertEq(ERC1155(token).balanceOf(bob, tokenId), 1);
         assertFalse(isError);
     }
 
     function testFillOrder_ERC1155_OrderPartial_Transfer_OrderAgain(uint48 expiration_, bytes32 orderId_)
-     public
-     whenExpirationIsInTheFuture(expiration_)
-     whenTokenIsERC1155()
-     whenOrderIdIsNotZero(orderId_) {
-        (address token, address owner, address spender, uint256 tokenId, uint208 amount, uint48 expiration, bytes32 orderId, uint256 nonce) = _cacheData();
+        public
+        whenExpirationIsInTheFuture(expiration_)
+        whenTokenIsERC1155
+        whenOrderIdIsNotZero(orderId_)
+    {
+        (
+            address token,
+            address owner,
+            address spender,
+            uint256 tokenId,
+            uint208 amount,
+            uint48 expiration,
+            bytes32 orderId,
+            uint256 nonce
+        ) = _cacheData();
         orderId = bytes32(0);
         _mint1155(token, owner, 1, 2000);
 
         changePrank(owner);
         ERC1155(token).setApprovalForAll(address(permitC), true);
 
-
         permitC.registerAdditionalDataHash(FILL_PERMITTED_ORDER_STRING);
 
-        bytes memory signedPermit = getSignature(SignatureDetails({
-            operator: spender, 
-            token: token, 
-            tokenId: tokenId, 
-            orderId: orderId, 
-            amount: 1000, 
-            nonce: nonce, 
-            approvalExpiration: expiration,
-            sigDeadline: expiration,
-            tokenOwnerKey: aliceKey
-        }));
+        bytes memory signedPermit = getSignature(
+            SignatureDetails({
+                operator: spender,
+                token: token,
+                tokenId: tokenId,
+                orderId: orderId,
+                amount: 1000,
+                nonce: nonce,
+                approvalExpiration: expiration,
+                sigDeadline: expiration,
+                tokenOwnerKey: aliceKey
+            })
+        );
 
         OrderFillAmounts memory orderFillAmounts = OrderFillAmounts({
             orderStartAmount: uint200(1000),
@@ -188,10 +215,18 @@ contract PermitC1155OrderApprovalTransferTest is BaseTest {
 
         changePrank(spender);
         (, bool isError) = permitC.fillPermittedOrderERC1155(
-            signedPermit, orderFillAmounts, token, tokenId, owner, spender, nonce, expiration, 
-            orderId, FILL_PERMITTED_ORDER_TYPEHASH
+            signedPermit,
+            orderFillAmounts,
+            token,
+            tokenId,
+            owner,
+            spender,
+            nonce,
+            expiration,
+            orderId,
+            FILL_PERMITTED_ORDER_TYPEHASH
         );
-  
+
         assertEq(ERC1155(token).balanceOf(bob, tokenId), 500);
         assertFalse(isError);
 
@@ -199,28 +234,43 @@ contract PermitC1155OrderApprovalTransferTest is BaseTest {
         permitC.transferFromERC1155(owner, spender, token, tokenId, 500);
         assertEq(ERC1155(token).balanceOf(bob, tokenId), 500);
 
-
         (, isError) = permitC.fillPermittedOrderERC1155(
-            signedPermit, orderFillAmounts, token, tokenId, owner, spender, nonce, expiration, 
-            orderId, FILL_PERMITTED_ORDER_TYPEHASH
+            signedPermit,
+            orderFillAmounts,
+            token,
+            tokenId,
+            owner,
+            spender,
+            nonce,
+            expiration,
+            orderId,
+            FILL_PERMITTED_ORDER_TYPEHASH
         );
 
         assertEq(ERC1155(token).balanceOf(bob, tokenId), 1000);
 
-
         vm.expectRevert(PermitC__OrderIsEitherCancelledOrFilled.selector);
         (, isError) = permitC.fillPermittedOrderERC1155(
-            signedPermit, orderFillAmounts, token, tokenId, owner, spender, nonce, expiration, 
-            orderId, FILL_PERMITTED_ORDER_TYPEHASH
+            signedPermit,
+            orderFillAmounts,
+            token,
+            tokenId,
+            owner,
+            spender,
+            nonce,
+            expiration,
+            orderId,
+            FILL_PERMITTED_ORDER_TYPEHASH
         );
         assertEq(ERC1155(token).balanceOf(bob, tokenId), 1000);
     }
 
     function testFillOrder_ERC1155_AfterMasterNonceIncrease(uint48 expiration_, bytes32 orderId_)
-     public
-     whenExpirationIsInTheFuture(expiration_)
-     whenTokenIsERC1155()
-     whenOrderIdIsNotZero(orderId_) {
+        public
+        whenExpirationIsInTheFuture(expiration_)
+        whenTokenIsERC1155
+        whenOrderIdIsNotZero(orderId_)
+    {
         _mint1155(testData.token, testData.owner, 1, 100);
 
         changePrank(testData.owner);
@@ -230,17 +280,19 @@ contract PermitC1155OrderApprovalTransferTest is BaseTest {
 
         testData.amount = 100;
 
-        bytes memory signedPermit = getSignature(SignatureDetails({
-            operator: testData.spender, 
-            token: testData.token, 
-            tokenId: testData.tokenId, 
-            orderId: testData.orderId, 
-            amount: testData.amount, 
-            nonce: testData.nonce, 
-            approvalExpiration: testData.expiration,
-            sigDeadline: testData.expiration,
-            tokenOwnerKey: aliceKey
-        }));
+        bytes memory signedPermit = getSignature(
+            SignatureDetails({
+                operator: testData.spender,
+                token: testData.token,
+                tokenId: testData.tokenId,
+                orderId: testData.orderId,
+                amount: testData.amount,
+                nonce: testData.nonce,
+                approvalExpiration: testData.expiration,
+                sigDeadline: testData.expiration,
+                tokenOwnerKey: aliceKey
+            })
+        );
 
         OrderFillAmounts memory orderFillAmounts = OrderFillAmounts({
             orderStartAmount: uint200(testData.amount),
@@ -250,31 +302,53 @@ contract PermitC1155OrderApprovalTransferTest is BaseTest {
 
         changePrank(testData.spender);
         (, bool isError) = permitC.fillPermittedOrderERC1155(
-            signedPermit, orderFillAmounts, testData.token, testData.tokenId, testData.owner, testData.spender, testData.nonce, testData.expiration, 
-            testData.orderId, FILL_PERMITTED_ORDER_TYPEHASH
+            signedPermit,
+            orderFillAmounts,
+            testData.token,
+            testData.tokenId,
+            testData.owner,
+            testData.spender,
+            testData.nonce,
+            testData.expiration,
+            testData.orderId,
+            FILL_PERMITTED_ORDER_TYPEHASH
         );
-  
+
         assertEq(ERC1155(testData.token).balanceOf(testData.spender, testData.tokenId), 50);
         assertFalse(isError);
 
-        (uint256 allowance, uint256 expiration) = permitC.allowance(testData.owner, testData.spender, TOKEN_TYPE_ERC1155, testData.token, testData.tokenId, testData.orderId);
+        (uint256 allowance, uint256 expiration) = permitC.allowance(
+            testData.owner, testData.spender, TOKEN_TYPE_ERC1155, testData.token, testData.tokenId, testData.orderId
+        );
         assertEq(allowance, 50);
         assertEq(expiration, testData.expiration);
 
         changePrank(testData.owner);
         permitC.lockdown();
 
-        (uint256 allowanceAfter, uint256 expirationAfter) = permitC.allowance(testData.owner, testData.spender, TOKEN_TYPE_ERC1155, testData.token, testData.tokenId, testData.orderId);
+        (uint256 allowanceAfter, uint256 expirationAfter) = permitC.allowance(
+            testData.owner, testData.spender, TOKEN_TYPE_ERC1155, testData.token, testData.tokenId, testData.orderId
+        );
         assertEq(allowanceAfter, 0);
         assertEq(expirationAfter, 0);
     }
 
     function testFillOrder_ERC1155_AllowanceAmountResetsAfterRevert(uint48 expiration_, bytes32 orderId_)
-     public
-     whenExpirationIsInTheFuture(expiration_)
-     whenTokenIsReverter()
-     whenOrderIdIsNotZero(orderId_) {
-        (address token, address owner, address spender, uint256 tokenId, uint208 amount, uint48 expiration, bytes32 orderId, uint256 nonce) = _cacheData();
+        public
+        whenExpirationIsInTheFuture(expiration_)
+        whenTokenIsReverter
+        whenOrderIdIsNotZero(orderId_)
+    {
+        (
+            address token,
+            address owner,
+            address spender,
+            uint256 tokenId,
+            uint208 amount,
+            uint48 expiration,
+            bytes32 orderId,
+            uint256 nonce
+        ) = _cacheData();
         _mint1155(token, owner, 1, 1);
 
         changePrank(owner);
@@ -282,17 +356,19 @@ contract PermitC1155OrderApprovalTransferTest is BaseTest {
 
         permitC.registerAdditionalDataHash(FILL_PERMITTED_ORDER_STRING);
 
-        bytes memory signedPermit = getSignature(SignatureDetails({
-            operator: spender, 
-            token: token, 
-            tokenId: tokenId, 
-            orderId: orderId, 
-            amount: amount, 
-            nonce: nonce, 
-            approvalExpiration: expiration,
-            sigDeadline: expiration,
-            tokenOwnerKey: aliceKey
-        }));
+        bytes memory signedPermit = getSignature(
+            SignatureDetails({
+                operator: spender,
+                token: token,
+                tokenId: tokenId,
+                orderId: orderId,
+                amount: amount,
+                nonce: nonce,
+                approvalExpiration: expiration,
+                sigDeadline: expiration,
+                tokenOwnerKey: aliceKey
+            })
+        );
 
         OrderFillAmounts memory orderFillAmounts = OrderFillAmounts({
             orderStartAmount: uint200(amount),
@@ -304,10 +380,18 @@ contract PermitC1155OrderApprovalTransferTest is BaseTest {
         vm.expectEmit(true, true, true, true);
         emit OrderRestored(orderId, owner, amount);
         (, bool isError) = permitC.fillPermittedOrderERC1155(
-            signedPermit, orderFillAmounts, token, tokenId, owner, spender, nonce, expiration, 
-            orderId, FILL_PERMITTED_ORDER_TYPEHASH
+            signedPermit,
+            orderFillAmounts,
+            token,
+            tokenId,
+            owner,
+            spender,
+            nonce,
+            expiration,
+            orderId,
+            FILL_PERMITTED_ORDER_TYPEHASH
         );
-  
+
         assertEq(ERC1155(token).balanceOf(alice, tokenId), 1);
         assert(isError);
     }
@@ -336,13 +420,26 @@ contract PermitC1155OrderApprovalTransferTest is BaseTest {
                 )
             );
 
-            (v,r,s)= vm.sign(details.tokenOwnerKey, digest);
+            (v, r, s) = vm.sign(details.tokenOwnerKey, digest);
         }
 
         signedPermit = abi.encodePacked(r, s, v);
     }
 
-    function _cacheData() internal view returns (address token, address owner, address spender, uint256 tokenId, uint208 amount, uint48 expiration, bytes32 orderId, uint256 nonce) {
+    function _cacheData()
+        internal
+        view
+        returns (
+            address token,
+            address owner,
+            address spender,
+            uint256 tokenId,
+            uint208 amount,
+            uint48 expiration,
+            bytes32 orderId,
+            uint256 nonce
+        )
+    {
         token = testData.token;
         owner = testData.owner;
         spender = testData.spender;
